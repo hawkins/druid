@@ -15,7 +15,8 @@ void apply(FILE* fp, const int offset, const char* directive, const char* parame
 {
   if (!strncmp(directive, "summon", 6))
   {
-    printf("Found summon");
+    printf("Found summon\n");
+    // TODO: include parameter file here in-place in fp
   }
 }
 
@@ -25,14 +26,20 @@ void apply(FILE* fp, const int offset, const char* directive, const char* parame
  *
  * Return zero if EOF, else non-zero
  */
-int read(FILE* fp, int* offset, char* buff, int size)
+int read(FILE* fp)
 {
   regex_t regex;
   int reti;
+  int offset;
 
-  // TODO: fgetln?
-  fgetln(buff, size, fp);
-  *offset = *offset + (int) strnlen(buff, size);
+  size_t linesiz = 0;
+  char* linebuf = 0;
+  ssize_t linelen = 0;
+
+  linelen = getline(&linebuf, &linesiz, fp);
+  if (linelen == 0) return 0;
+
+  offset = offset + linesiz;
   
   reti = regcomp(&regex, "^\\s*#\\(.*\\) \\(..*\\)$", 0);
   if (reti) {
@@ -40,25 +47,25 @@ int read(FILE* fp, int* offset, char* buff, int size)
     exit(1);
   }
   
-  regmatch_t match[size + 1];
-  reti = regexec(&regex, buff, size, match, 0);
+  regmatch_t match[linesiz];
+  reti = regexec(&regex, linebuf, linesiz, match, 0);
   if (!reti) {
     // Whole match
     char* result = (char*) malloc(match[0].rm_eo - match[0].rm_so);
-    strncpy(result, &buff[match[0].rm_so], match[0].rm_eo - match[0].rm_so - 1);
+    strncpy(result, &linebuf[match[0].rm_so], match[0].rm_eo - match[0].rm_so - 1);
     result[match[0].rm_eo - match[0].rm_so - 1] = '\0';
     
     // Group 1 (i.e., summon)
     char* directive = (char*) malloc(match[1].rm_eo - match[1].rm_so);
-    strncpy(directive, &buff[match[1].rm_so], match[1].rm_eo - match[1].rm_so);
+    strncpy(directive, &linebuf[match[1].rm_so], match[1].rm_eo - match[1].rm_so);
     
     // Group 2 (i.e., file)
     char* parameter = (char*) malloc(match[2].rm_eo - match[2].rm_so);
-    strncpy(parameter, &buff[match[2].rm_so], match[2].rm_eo - match[2].rm_so - 1);
+    strncpy(parameter, &linebuf[match[2].rm_so], match[2].rm_eo - match[2].rm_so - 1);
     parameter[match[2].rm_eo - match[2].rm_so - 1] = '\0';
 
     printf("Found directive: %s (%s, %s)\n", result, directive, parameter);
-    apply(fp, *offset, directive, parameter);
+    apply(fp, offset, directive, parameter);
 
     free(result);
     free(directive);
@@ -71,6 +78,7 @@ int read(FILE* fp, int* offset, char* buff, int size)
     exit(1);
   }
   regfree(&regex);
+  free(linebuf);
 
   return feof(fp);
 }
@@ -87,18 +95,8 @@ int main(int argc, char** argv)
 
   FILE* fp = fopen(argv[1], "r+");
 
-  int offset = 0;
-  int size = 2047;
-  char buff[size + 1];
-
-  // TODO: Handle case where buffer is split in pp directive
-  // ... check, from end of buffer, if we're in a pp directive
-  // if so, extract start of the directive and reset buffer with
-  // just this directive in the start
-  while (!read(fp, &offset, buff, size))
-  {
-    //printf("%s", buff);
-  }
+  // Read and preprocess whole file line-by-line
+  while (!read(fp)) {}
   fclose(fp);
 
   return 0;
