@@ -31,15 +31,13 @@ int read(FILE* fp)
   regex_t regex;
   int reti;
   int offset;
+  size_t length = 0;
+  char* buffer = 0;
+  
+  if (getline(&buffer, &length, fp) == (ssize_t) 0)
+    return 0;
 
-  size_t linesiz = 0;
-  char* linebuf = 0;
-  ssize_t linelen = 0;
-
-  linelen = getline(&linebuf, &linesiz, fp);
-  if (linelen == 0) return 0;
-
-  offset = offset + linesiz;
+  offset = offset + length;
   
   reti = regcomp(&regex, "^\\s*#\\(.*\\) \\(..*\\)$", 0);
   if (reti) {
@@ -47,21 +45,21 @@ int read(FILE* fp)
     exit(1);
   }
   
-  regmatch_t match[linesiz];
-  reti = regexec(&regex, linebuf, linesiz, match, 0);
+  regmatch_t match[length];
+  reti = regexec(&regex, buffer, length, match, 0);
   if (!reti) {
     // Whole match
     char* result = (char*) malloc(match[0].rm_eo - match[0].rm_so);
-    strncpy(result, &linebuf[match[0].rm_so], match[0].rm_eo - match[0].rm_so - 1);
+    strncpy(result, &buffer[match[0].rm_so], match[0].rm_eo - match[0].rm_so - 1);
     result[match[0].rm_eo - match[0].rm_so - 1] = '\0';
     
     // Group 1 (i.e., summon)
     char* directive = (char*) malloc(match[1].rm_eo - match[1].rm_so);
-    strncpy(directive, &linebuf[match[1].rm_so], match[1].rm_eo - match[1].rm_so);
+    strncpy(directive, &buffer[match[1].rm_so], match[1].rm_eo - match[1].rm_so);
     
     // Group 2 (i.e., file)
     char* parameter = (char*) malloc(match[2].rm_eo - match[2].rm_so);
-    strncpy(parameter, &linebuf[match[2].rm_so], match[2].rm_eo - match[2].rm_so - 1);
+    strncpy(parameter, &buffer[match[2].rm_so], match[2].rm_eo - match[2].rm_so - 1);
     parameter[match[2].rm_eo - match[2].rm_so - 1] = '\0';
 
     printf("Found directive: %s (%s, %s)\n", result, directive, parameter);
@@ -78,7 +76,7 @@ int read(FILE* fp)
     exit(1);
   }
   regfree(&regex);
-  free(linebuf);
+  free(buffer);
 
   return feof(fp);
 }
@@ -93,9 +91,8 @@ int main(int argc, char** argv)
     return 0;
   }
 
-  FILE* fp = fopen(argv[1], "r+");
-
   // Read and preprocess whole file line-by-line
+  FILE* fp = fopen(argv[1], "r+");
   while (!read(fp)) {}
   fclose(fp);
 
