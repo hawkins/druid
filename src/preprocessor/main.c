@@ -9,17 +9,30 @@
 #include <string.h>
 
 /*
+ * Apply directive
+ */
+void apply(FILE* fp, const int offset, const char* directive, const char* parameter)
+{
+  if (!strncmp(directive, "summon", 6))
+  {
+    printf("Found summon");
+  }
+}
+
+/*
  * Read up to <size> characters from <fp> into <buff>,
  * until the buffer is filled, or a preprocessor command has been encountered.
  *
  * Return zero if EOF, else non-zero
  */
-int read(FILE* fp, char* buff, int size)
+int read(FILE* fp, int* offset, char* buff, int size)
 {
   regex_t regex;
   int reti;
 
-  fgets(buff, size, fp);
+  // TODO: fgetln?
+  fgetln(buff, size, fp);
+  *offset = *offset + (int) strnlen(buff, size);
   
   reti = regcomp(&regex, "^\\s*#\\(.*\\) \\(..*\\)$", 0);
   if (reti) {
@@ -45,6 +58,7 @@ int read(FILE* fp, char* buff, int size)
     parameter[match[2].rm_eo - match[2].rm_so - 1] = '\0';
 
     printf("Found directive: %s (%s, %s)\n", result, directive, parameter);
+    apply(fp, *offset, directive, parameter);
 
     free(result);
     free(directive);
@@ -73,10 +87,15 @@ int main(int argc, char** argv)
 
   FILE* fp = fopen(argv[1], "r+");
 
+  int offset = 0;
   int size = 2047;
   char buff[size + 1];
 
-  while (!read(fp, buff, size))
+  // TODO: Handle case where buffer is split in pp directive
+  // ... check, from end of buffer, if we're in a pp directive
+  // if so, extract start of the directive and reset buffer with
+  // just this directive in the start
+  while (!read(fp, &offset, buff, size))
   {
     //printf("%s", buff);
   }
