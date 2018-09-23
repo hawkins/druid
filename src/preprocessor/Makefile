@@ -9,4 +9,5 @@ preprocessor: main.c
 
 test: preprocessor
 	./preprocessor hello.druid
+	diff hello.druid_l hello.druid ; cp hello.druid_l hello.druid
 

@@ -108,6 +108,13 @@ int read(FILE* fp)
   return feof(fp);
 }
 
+void preprocess(const char* filename)
+{
+  FILE* fp = fopen(filename, "r+");
+  while (!read(fp)) {}
+  fclose(fp);
+}
+
 int main(int argc, char** argv)
 {
   if (argc > 3)
@@ -118,10 +125,7 @@ int main(int argc, char** argv)
     return 0;
   }
 
-  // Read and preprocess whole file line-by-line
-  FILE* fp = fopen(argv[1], "r+");
-  while (!read(fp)) {}
-  fclose(fp);
+  preprocess(argv[1]);
 
   return 0;
 }
