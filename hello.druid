@@ -2,6 +2,8 @@
 #summon math
 #summon dataCube
 
+/* comment */
+
 status entry_point()
 {
     if(g:count)
@@ -18,3 +20,35 @@ status entry_point()
 
     return(status:success);
 }
+
+/*
+
+Expected Tokens:
+<"token">, <TokenType>
+---------------------
+"status", keyword
+"entry_point", operator
+"(", delimiter
+")", delimiter
+{, delimiter
+"if", keyword
+"(", delimiter
+"g", keyword
+":", delimiter
+"count", compound
+")", delimiter
+"{", delimiter
+"// do stuff", alphabetical
+"}", delimiter
+"stdout", keyword
+"(", delimiter
+""", delimiter
+"Hello world!\n", alphabetical
+""", delimiter
+")", delimiter
+";", delimiter
+"stdout", keyword
+"(", delimiter
+""", delimiter
+
+*/

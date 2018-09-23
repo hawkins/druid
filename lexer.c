@@ -20,13 +20,13 @@
 #define assemblyDruid_todo printf("TODO\n"); fflush(stdout); assert(0)
 #endif
 
-typedef enum
-    {
-	terminal_type_none,
-	terminal_type_unknown,
-	terminal_type_terminal,
-	terminal_type_nonterminal
-    } TerminalType;
+/* typedef enum */
+/*     { */
+/* 	terminal_type_none, */
+/* 	terminal_type_unknown, */
+/* 	terminal_type_terminal, */
+/* 	terminal_type_nonterminal */
+/*     } TerminalType; */
 
 typedef enum
     {
@@ -38,13 +38,13 @@ typedef enum
 	token_type_delimiter,
 	token_type_operator,
 	token_type_forbidden,
+	token_type_compound, /* [ assemblyDruid::NOTE ] needed? */
 	token_type_ignored
     } TokenType;
 
 typedef struct
 {
     TokenType token_type;
-    TerminalType terminal_type;
     char* data;
 } Token;
 
@@ -61,21 +61,21 @@ Token TokenStream[100];
 /* { */
 /* } statistics; */
 
-/* const char* sample_program = mlstring( */
-/*     \#summon stdio */
+const char* sample_program = mlstring(
+    \#summon stdio
     
-/*     status entry_point() */
-/*     { */
-/* 	if(g:count) */
-/* 	{ */
-/* 	    /\* do stuff *\/ */
-/* 	    /\* do more stuff *\/ */
-/* 	} */
+    status entry_point()
+    {
+	if(g:count)
+	{
+	    /* do stuff */
+	    /* do more stuff */
+	}
     
-/* 	stdout("Hello world!\n"); */
-/* 	return(status:success); */
-/*     } */
-/*     ); */
+	stdout("Hello world!\n");
+	return(status:success);
+    }
+    );
 
 /* function prototypes */
 void ExpandTokenStream();
@@ -86,10 +86,16 @@ const char IsNumeric(const char character);
 const char IsDelimiter(const char character);
 
 const char TestIsAlphabetical();
+const char TestIsNumeric();
+const char TestIsDelimiter();
  
 const char IsKeyword(const char* p_character); /* [ cfarvin::TODO ] string internment */
 const char IsOperator(const char*);
 const char IsForbidden(const char*);
+
+const char TestIsKeyword();
+const char TestIsOperator();
+const char TestIsDelimiter();
  
 const char IsTerminal(const char*);
 const char IsNonTerminal(const char*);
