@@ -23,15 +23,33 @@
 
 typedef enum
 {
-	token_type_none,
-	token_type_unknown,
-	token_type_keyword,
-	token_type_numeric,
-	token_type_alphabetical,
-	token_type_delimiter,
-	token_type_operator,
-	token_type_forbidden,
-	token_type_ignored
+  /* Feedback */
+	tok_none,
+  /* Punctuation */
+  //tok_dot,
+  tok_semicolon,
+  tok_colon,
+  tok_comment_multiline,
+  tok_comment,
+  tok_brace_open,
+  tok_brace_close,
+  tok_paren_open,
+  tok_paren_close,
+  tok_string,
+  tok_char,
+  //tok_quote_double, // TODO: Can't we just have string/char instead?
+  //tok_quote_single,
+  /* Operators */
+  tok_equal,
+  tok_equal_double,
+  tok_minus,
+  tok_plus,
+  tok_asterisk,
+  tok_slash,
+  /* Keywords */
+  tok_return,
+  /* User definitions */
+  tok_identifier,
 } TokenType;
 
 typedef struct
@@ -44,7 +62,7 @@ Token* TokenStream[100];
 
 /* function prototypes */
 void ExpandTokenStream();
-//const char* const  NextToken();
+void NextToken(char*);
 
 const char IsAlphabetical(const char character);
 const char IsNumeric(const char character);
@@ -63,10 +81,10 @@ TokenType DetermineTokenType();
 
 void NextToken(char* buffer)
 {
-    fscanf(stdin, "%s", buffer);
-// Read characters until a token type can be determined by pattern matching
-// Read characters until a new character is read that does not match the current pattern   
-// Set buffer to the read token
+  fscanf(stdin, "%s", buffer);
+  // Read characters until a token type can be determined by pattern matching
+  // Read characters until a new character is read that does not match the current pattern   
+  // Set buffer to the read token
 }
 
 const char IsAlphabetical(const char character)
