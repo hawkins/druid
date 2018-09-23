@@ -1,0 +1,20 @@
+#summon stdio
+#summon math
+#summon dataCube
+
+status entry_point()
+{
+    if(g:count)
+    {
+        // do stuff
+    }
+    
+    stdout("Hello world!\n");
+    stdout("Fibb of %d: %d\n", 9, math::fib(9));
+    
+    data_cube = conjure(DataCube);
+    data_cube:print_data();
+    banish(data_cube);
+
+    return(status:success);
+}
