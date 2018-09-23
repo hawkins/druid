@@ -1,3 +1,9 @@
+typedef enum
+    {
+        preprocessing_none,
+        preprocessing_summon
+    } PreprocessingDirective;
+
 /*
  * Druid Pre-processor
  *
@@ -13,7 +19,7 @@ void copyfile(FILE* source, const char* target_filename);
 /*
  * Apply directive
  */
-void apply(FILE* fp, long int offset, const char* directive, const char* parameter);
+ void apply(FILE* fp, long int offset, PreprocessingDirective directive, const char* parameter);
 
 /*
  * Read a line from the file and apply any preprocessor directives if found
@@ -25,7 +31,8 @@ int read(FILE* fp);
 /*
  * Pre-process the given file
  */
-void preprocess(const char* filename);
+/* [ assemblyDruid::NOTE ] do we need one that takes a FILE* as well? */
+void preprocess(const char* filename); /* void preprocess(const FILE* fp); */ 
 
 /*
  * Include referenced file verbatim
