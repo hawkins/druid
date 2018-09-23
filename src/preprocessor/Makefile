@@ -6,3 +6,7 @@ clean:
 
 preprocessor: main.c
 	$(CC) $< -o $@
+
+test: preprocessor
+	./preprocessor hello.druid
+

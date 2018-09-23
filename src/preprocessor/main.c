@@ -11,12 +11,39 @@
 /*
  * Apply directive
  */
-void apply(FILE* fp, const int offset, const char* directive, const char* parameter)
+void apply(FILE* fp, const long int offset, const char* directive, const char* parameter)
 {
   if (!strncmp(directive, "summon", 6))
   {
     printf("Found summon\n");
-    // TODO: include parameter file here in-place in fp
+    printf(" offset: %ld\n", offset);
+
+    // TODO: Preprocess this file before summoning it
+
+    char filename[1024];
+    strncpy(&filename, parameter, sizeof(filename));
+    strncat(&filename, ".druid", sizeof(filename));
+    FILE* input = fopen(filename, "r");
+
+    // Set file position to offset so we can edit in-place
+    long int previous_offset = ftell(fp);
+    fseek(fp, offset, SEEK_SET);
+
+    int buffersize = 10;
+    char buffer[buffersize];
+    while (fgets(buffer, sizeof(buffer), input)) {
+      fwrite(buffer, sizeof(char), strnlen(buffer, buffersize), fp);
+    }
+
+    // Restore file position so program is read is unaffected
+    fseek(fp, previous_offset, SEEK_SET);
+
+    fclose(input);
+  }
+  else
+  {
+    fprintf(stderr, "Error: unknown preprocessor directive!");
+    exit(1);
   }
 }
 
@@ -30,14 +57,12 @@ int read(FILE* fp)
 {
   regex_t regex;
   int reti;
-  int offset;
+  long int offset = ftell(fp);
   size_t length = 0;
   char* buffer = 0;
   
   if (getline(&buffer, &length, fp) == (ssize_t) 0)
     return 0;
-
-  offset = offset + length;
   
   reti = regcomp(&regex, "^\\s*#\\(.*\\) \\(..*\\)$", 0);
   if (reti) {
@@ -77,6 +102,8 @@ int read(FILE* fp)
   }
   regfree(&regex);
   free(buffer);
+
+  offset = offset + length;
 
   return feof(fp);
 }
