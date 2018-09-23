@@ -9,6 +9,26 @@
 
 #include "preprocessor.h"
 
+
+/*
+ * Make a copy of a file
+ */
+void copyfile(FILE* source, const char* target_filename)
+{
+  // TODO: Error handling is for chumps
+  long int offset = ftell(source);
+  fseek(source, 0L, SEEK_SET);
+  FILE* target = fopen(target_filename, "w");
+  char ch = '\0';
+  while(ch != EOF)
+  {
+    ch = fgetc(source);
+    fputc(ch, target);
+  }
+  fclose(target);
+  fseek(source, offset, SEEK_SET);;
+}
+
 /*
  * Apply directive
  */
@@ -26,20 +46,44 @@ void apply(FILE* fp, const long int offset, const char* directive, const char* p
     // Preprocess this file before summoning it so we know we have the final version
     preprocess(&filename);
 
-    FILE* input = fopen(filename, "r");
+    // Make a copy of the original file so we can re-write it back in after summoned resource
+    char tempfilename[1024];
+    strncpy(&tempfilename, parameter, sizeof(filename));
+    strncat(&tempfilename, ".ddp", sizeof(filename));
+    copyfile(fp, tempfilename);
+    printf("copied\n");
+
+    // We'll use this offset in the tempfile to find the remaining content
+    long int previous_offset = ftell(fp);
 
     // Set file position to offset so we can edit in-place
-    long int previous_offset = ftell(fp);
     fseek(fp, offset, SEEK_SET);
 
+    // Write the summoned resource into the file
+    FILE* input = fopen(filename, "r");
+    fseek(input, 0L, SEEK_END);
+    long int summoned_resource_size = ftell(fp);
+    fseek(input, 0L, SEEK_SET);
     int buffersize = 10;
     char buffer[buffersize];
     while (fgets(buffer, sizeof(buffer), input)) {
       fwrite(buffer, sizeof(char), strnlen(buffer, buffersize), fp);
     }
 
+    // TODO: Write the rest of the original file back into newly modified file
+    FILE* temp = fopen(tempfilename, "r");
+    fseek(temp, previous_offset, SEEK_SET);
+    char ch = getc(temp);
+    while (ch != EOF)
+    {
+      fputc(ch, fp);
+      ch = getc(temp);
+    }
+    fclose(temp);
+    remove(tempfilename);
+
     // Restore file position so program is read is unaffected
-    fseek(fp, previous_offset, SEEK_SET);
+    fseek(fp, offset + summoned_resource_size, SEEK_SET);
 
     fclose(input);
   }

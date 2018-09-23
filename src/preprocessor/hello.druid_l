@@ -1,6 +1,5 @@
 /* comment */
 #summon ./echo
-#summon nothing
 
 status entry_point()
 {
