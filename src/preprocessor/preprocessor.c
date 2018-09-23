@@ -3,26 +3,29 @@
  *
  * By Josh Hawkins and Cameron Farvin
  */
-#include <stdio.h>
 #include <stdlib.h>
 #include <regex.h>
 #include <string.h>
+
+#include "preprocessor.h"
 
 /*
  * Apply directive
  */
 void apply(FILE* fp, const long int offset, const char* directive, const char* parameter)
 {
+  char filename[1024];
+  strncpy(&filename, parameter, sizeof(filename));
+  strncat(&filename, ".druid", sizeof(filename));
+
   if (!strncmp(directive, "summon", 6))
   {
     printf("Found summon\n");
     printf(" offset: %ld\n", offset);
 
-    // TODO: Preprocess this file before summoning it
+    // Preprocess this file before summoning it so we know we have the final version
+    preprocess(&filename);
 
-    char filename[1024];
-    strncpy(&filename, parameter, sizeof(filename));
-    strncat(&filename, ".druid", sizeof(filename));
     FILE* input = fopen(filename, "r");
 
     // Set file position to offset so we can edit in-place
@@ -47,12 +50,6 @@ void apply(FILE* fp, const long int offset, const char* directive, const char* p
   }
 }
 
-/*
- * Read up to <size> characters from <fp> into <buff>,
- * until the buffer is filled, or a preprocessor command has been encountered.
- *
- * Return zero if EOF, else non-zero
- */
 int read(FILE* fp)
 {
   regex_t regex;

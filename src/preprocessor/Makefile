@@ -4,7 +4,7 @@ all: preprocessor
 clean:
 	$(RM) preprocessor
 
-preprocessor: main.c
+preprocessor: preprocessor.c preprocessor.h
 	$(CC) $< -o $@
 
 test: preprocessor
