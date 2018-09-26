@@ -124,12 +124,6 @@ int (FILE* fp)
     return 0;
 }
 
-void preprocess(const char* filename)
-{
-    FILE* fp = fopen(filename, "r+");
-    while (!read(fp)) {}
-    fclose(fp);
-}
 
 /*
   Maybe we call this repeatedly until no further directives are found?
@@ -153,6 +147,11 @@ int main(int argc, char** argv)
     }
 
     preprocess(argv[1]);
+    FILE* fp = fopen(filename, "r+");
+    while (!read(fp)) {}
+    fclose(fp);
+
+
 
     return 0;  
 }
