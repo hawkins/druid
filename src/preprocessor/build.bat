@@ -1,11 +1,6 @@
 @echo off
 
 pushd
-
-::
-:: [ SYSTEM DEPENDENT SRC/LIB/INCLUDE LOCATIONS ]
-::
-
 @where cl >nul 2>nul
 :: If cl was not found in path, initialize for x86
 IF %ERRORLEVEL% NEQ 0 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall" x86 >nul
@@ -20,6 +15,9 @@ IF %ERRORLEVEL% NEQ 0 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\
 :: /GL	   Whole program optimization.
 :: /EHsc   No exception handling (Unwind semantics requrie vstudio env). (See /W1).
 :: /I<arg> Specify include directory.
+:: /Wall   Displays all warnings, including those that have been turned off by default.
+:: /W3     Displays all "production quality" warnings.
+:: /WX     Treats all compiler warnings as errors.
 
 ::
 :: [ LINKER OPTIONS ]
@@ -34,7 +32,7 @@ popd
 
 :: "%~1" prefix the first command line arg with the string "..\..\"
 :: and remove quotations before seinding it as an argument to cl.
-cl %~1 /Za -Z7 /GS /MD /EHsc /nologo /link /NXCOMPAT /MACHINE:x86 /NODEFAULTLIB:MSVCRTD
+cl %~1 /W3 /WX /Za -Z7 /GS /MD /EHsc /nologo /link /NXCOMPAT /MACHINE:x86 /NODEFAULTLIB:MSVCRTD
 ::/LIBPATH: user32.lib
 ::gdi32.lib ^
 ::shell32.lib ^
