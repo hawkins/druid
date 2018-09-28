@@ -16,6 +16,19 @@
 #define real64 double
 #define real32 float
 
+#ifndef DRUID_DEBUG
+#define DRUID_DEBUG 1
+#endif /* DRUID_DEBUG */
+
+#ifndef dbgPrint
+#if DRUID_DEBUG 
+#define dbgPrint(_str, ...) printf(_str, __VA_ARGS__);
+#else
+#define dbgPrint(x) /* dbgPrint(x) */
+#endif /* DRUID_DEBUG */
+#endif /* dbgPrint */
+
+
 typedef enum
     {
         directive_none,
@@ -23,6 +36,10 @@ typedef enum
         directive_custom
     } PreprocessingDirective;
 
+/*
+  [ assemblyDruid::TODO ] wrote a lot of code in main() that should be constructing these.
+  Either construct them as intended, or remove this if it is unneeded.
+*/
 typedef struct
 {
     PreprocessingDirective directive;
@@ -117,6 +134,19 @@ MacroCache MacroCacheStream[100];
 /*     } */
 /* } */
 
+/*
+ *
+ *
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *
+ * Dear Josh, this code is terrible. This is simply "get it working code" After it works,
+ * let's pull it out into beautiful functions and make it more legible. Until then, please no hate.
+ * I know I'm terrible, I will laugh with you - at myself.
+ *
+ *!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *
+ *
+ */
 
 /*
   Maybe we call this repeatedly until no further directives are found?
@@ -137,7 +167,6 @@ int main(int argc, char** argv)
         printf("argv[%d]: %s\n", i, argv[i]);
     }
 
-
     /*
       Preprocesing assumptions (for now):
       1) A preprocessing directive takes up exactly one line, unless escaped (like C/C++).
@@ -153,8 +182,6 @@ int main(int argc, char** argv)
 
     char*  file_buffer;
     size_t total_file_size;
-    size_t line_position_start;
-    size_t line_position_end;
     FILE*  file_stream;
     /* [ assemblyDruid::TODO ] check all possible return values for fopen_s */
     /* [ assemblyDruid::TODO ] look into more than 'r' for better opening options */
@@ -164,11 +191,8 @@ int main(int argc, char** argv)
         _fseeki64( file_stream, 0, SEEK_END );
         total_file_size = ftell( file_stream );
         file_buffer = (char*) calloc(total_file_size, sizeof(char));
-
         _fseeki64( file_stream, 0, SEEK_SET );
         fread(file_buffer, sizeof(char), total_file_size, file_stream);
-        printf("\n%s\n", file_buffer);
-
     }
     else
     {
@@ -176,56 +200,121 @@ int main(int argc, char** argv)
         printf("[ FATAL ] Could not open the file. Also, you should make better error messages\n");
         assert(0);
     }
-
-    /*
-
-
-      [ assemblyDruid::TODO:REMEMBER ] Printing jibberish on #summon dataCube line
-
-
-    */
     
     /*
       Begin parsing the file_buffer for '#'
     */
     size_t cursor_position = 0;
-    size_t directive_length = 0;
-    char* directive_source = NULL;
     for (; cursor_position < total_file_size; cursor_position++)
     {
+        size_t directive_length = 0;
+        char* directive_source = NULL;
+        char* directive_keyword = NULL;
+        size_t line_position_start = 0;
+        size_t line_position_end = 0;
+
         if (file_buffer[cursor_position] == '#')
         {
+            /*
+              '#' was found. Find '\n'
+            */
             line_position_start = cursor_position;
             for (; cursor_position < total_file_size; cursor_position++)
             {
                 char newline_found = 0;
                 if(file_buffer[cursor_position] == '\n' )
                 {
+                    /*
+                      '\n' was found. Extract directive
+                    */
                     newline_found = 1;
                     line_position_end = cursor_position;
-                    directive_length = line_position_end - line_position_start;
-                    directive_source = (char*) calloc((line_position_end - line_position_start),
-                                                      sizeof(char));
+
+                    /* [ assemblyDruid:TODO ] turn each assertion into valid error message -> exit() */
+                    directive_length = line_position_end - line_position_start + 1;
+                    assert(line_position_end); /* dont want negative index */
+                    assert(directive_length > 2);
+                    directive_source = (char*) calloc(directive_length, sizeof(char));
                     size_t directive_cursor = 0;
-                    for (; directive_cursor < directive_length; directive_cursor++ )
+                    for (; directive_cursor < (directive_length - 1); directive_cursor++)
                     {
                         directive_source[directive_cursor] = file_buffer[line_position_start + directive_cursor];
                     }
-                    printf("[ PREPROCESSING DIRECTIVE ] %s\n", directive_source);
+                    directive_source[directive_length - 1] = '\0';
+                    /*
+                      Directive Extracted. Determine directive type. (look for first space)
+                    */
+                    dbgPrint("[ PREPROCESSING DIRECTIVE SOURCE ] %s\n", directive_source);
+
+                    assert(directive_source[0] == '#');
+                    size_t directive_source_cursor = 1;
+                    for (; directive_source_cursor < directive_length; directive_source_cursor++)
+                    {
+                        if(directive_source[directive_source_cursor] == ' ')
+                        {
+                            if(directive_keyword) { free(directive_keyword); }
+                            directive_keyword = (char*) calloc(directive_source_cursor, sizeof(char));
+                            size_t n = 0;
+                            for (; n < directive_source_cursor; n++)
+                            {
+                                directive_keyword[n] = directive_source[n + 1];
+                            }
+                            directive_keyword[directive_source_cursor - 1] = '\0';
+                            break;
+                        }
+                    }
+                    dbgPrint("[ POTENTIAL DIRECTIVE TYPE ] %s\n", directive_keyword);
+                    /*
+                      [ assemblyDruid::NOTE::TODO ] here we get into string comparison. We can intern strings,
+                      or we can hash them. For now, for the sake of getting something working and since we can
+                      note deliberate on which would be better ( or other options in general ), i'm just going
+                      to do stuipd, expensive string comparison.
+
+                      This is extra extra stupid as we will have to compare between every "string" in the 
+                      list of possible directive types. (i.e. "summon" versus "if", etc). For the time being,
+                      we're only checking for "summon". We will need to have this discussion before adding more
+                      possible directive types.
+                    */
+
+                    /* Directive type determined. Do the thing. */
+                    if (!strncmp(directive_keyword, "summon", directive_source_cursor))
+                    {
+                        dbgPrint("[ DIRECTIVE DETECTED ] %s, %d characters compared\n",
+                                 directive_keyword, directive_source_cursor);
+
+                        /*
+                          !!!!!!!!!!!!!!!!!
+                          [ assemblyDruid::REMEMBER ]
+                          you were about to figure out the file that summon refers to,
+                          so that you can pass it to the commented function signature below. :)
+                          !!!!!!!!!!!!!!!!
+                         */
+                         
+                        dbgPrint("\n");
+                        /* 
+                           void apply(FILE* fp,
+                           long int offset,
+                           PreprocessingDirective directive,
+                           const char* parameter)
+                        */
+                    }
+                    
                     break;
                 }
+
                 /* [ assemblyDruid::TODO ] handle EOF case (no newline) */
                 if ((cursor_position == (total_file_size -1)) && (!newline_found))
                 {
                     printf("[ FATAL ] No newline following directive\n");
                     assert(0);
                 }
+
+                /* cursor_position = line_position_start; */
             }
         }
+        if (directive_source) { free(directive_source); }
+        if (directive_keyword) { free(directive_keyword); }
     }
-    
-    cursor_position = line_position_start;
-    if (directive_source) { free(directive_source); }
 
     /*
       [ assemblyDruid::TODO ] look into setting the msvc flag for c89, if you haven't already and if possible
