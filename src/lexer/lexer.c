@@ -24,6 +24,42 @@
   assert(0)
 #endif
 
+#ifdef _TEST
+enum COMPARISON_OPERATOR {
+  TO_EQUAL,
+  TO_NOT_EQUAL,
+  TO_BE_GREATER_THAN,
+  TO_BE_LESS_THAN,
+  TO_BE_GREATER_THAN_OR_EQUAL_TO,
+  TO_BE_LESS_THAN_OR_EQUAL_TO
+};
+uint8_t expect(char* actual, enum COMPARISON_OPERATOR c, char* expected) {
+  switch (c) {
+    case TO_EQUAL:
+      if (strcmp(actual, expected) != 0) return 1;
+      break;
+    case TO_NOT_EQUAL:
+      if (strcmp(actual, expected) == 0) return 1;
+      break;
+    case TO_BE_GREATER_THAN:
+      if (strcmp(actual, expected) <= 0) return 1;  // TODO: Check this
+      break;
+    case TO_BE_LESS_THAN:
+      if (strcmp(actual, expected) >= 0) return 1;  // TODO: Check this
+      break;
+    case TO_BE_GREATER_THAN_OR_EQUAL_TO:
+      if (strcmp(actual, expected) < 0) return 1;
+      break;
+    case TO_BE_LESS_THAN_OR_EQUAL_TO:
+      if (strcmp(actual, expected) > 0) return 1;
+      break;
+    default:
+      return 1;
+  }
+  return 0;
+}
+#endif
+
 typedef enum {
   /* Feedback */
   tok_none,
@@ -63,7 +99,7 @@ Token* TokenStream[100];
 
 /* function prototypes */
 void ExpandTokenStream();
-void NextToken(char*);
+void NextToken(FILE*, char*);
 
 const char IsAlphabetical(const char character);
 const char IsNumeric(const char character);
@@ -80,12 +116,49 @@ const char IsTerminal(const char*);
 const char IsNonTerminal(const char*);
 TokenType DetermineTokenType();
 
-void NextToken(char* buffer) {
-  fscanf(stdin, "%s", buffer);
+void NextToken(FILE* f, char* buffer) {
+  fscanf(f, "%s", buffer);
   // Read characters until a token type can be determined by pattern matching
   // Read characters until a new character is read that does not match the
   // current pattern Set buffer to the read token
 }
+
+#ifdef _TEST
+uint64_t test_NextToken() {
+  printf("NextToken::\n");
+
+  char* inputs = "status func() {";
+  char* expecteds[5];
+  expecteds[0] = "status";
+  expecteds[1] = "func";
+  expecteds[2] = "(";
+  expecteds[3] = ")";
+  expecteds[4] = "{";
+
+  FILE* fp = fmemopen(inputs, strlen(inputs), "r");
+  setbuf(fp, inputs);
+
+  int length = sizeof(expecteds) / sizeof(expecteds[0]);
+  int errors = 0;
+  int i;
+  for (i = 0; i < length; ++i) {
+    char buffer[100];
+    NextToken(fp, buffer);
+    int result = expect(buffer, TO_EQUAL, expecteds[i]);
+    if (result != 0) {
+      printf("  * expected: %s\n    actual:   %s\n", expecteds[i], buffer);
+    }
+    errors += result;
+  }
+  fclose(fp);
+  if (errors > 0)
+    printf("-> FAILED: %i errors\n", errors);
+  else
+    printf("-> PASS\n");
+  printf("\n");
+  return errors;
+}
+#endif
 
 const char IsAlphabetical(const char character) {
   if (((character > 64) && (character < 91)) || /* ASCII 'A' -> 'Z' */
@@ -211,6 +284,20 @@ const char TestIsForbidden() {
 }
 
 int main(int argc, char** argv) {
+#ifdef _TEST
+  uint64_t numFailures = 0;
+
+  numFailures += test_NextToken();
+
+  /* Print final results */
+  printf("\n=======================\n");
+  if (numFailures > 0)
+    printf("FAIL: %llu tests failed\n", numFailures);
+  else
+    printf("PASS: All tests succeeded! Hooray!\n");
+  printf("=======================\n");
+  return numFailures;
+#else
   /* Token tempToken; */
   assert(TestIsAlphabetical());
   assert(TestIsNumeric());
@@ -222,7 +309,7 @@ int main(int argc, char** argv) {
   while (!feof(stdin)) {
     char* buffer = (char*)calloc((size_t)64, sizeof(char));
     // TODO: Split on delimiters, too, not just spaces
-    NextToken(buffer);
+    NextToken(stdin, buffer);
 
     // TODO: Create a token for the buffer
     Token* tok = (Token*)malloc(sizeof(Token*));
@@ -238,5 +325,6 @@ int main(int argc, char** argv) {
     printf("%s\n", TokenStream[index]->data);
 
   printf("\n[ SUCCESS ]\n");
-  return (0);
+  return 0;
+#endif
 }
