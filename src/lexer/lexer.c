@@ -33,7 +33,7 @@ enum COMPARISON_OPERATOR {
   TO_BE_GREATER_THAN_OR_EQUAL_TO,
   TO_BE_LESS_THAN_OR_EQUAL_TO
 };
-uint8_t expect(char* actual, enum COMPARISON_OPERATOR c, char* expected) {
+uint8_t expect_str(char* actual, enum COMPARISON_OPERATOR c, char* expected) {
   switch (c) {
     case TO_EQUAL:
       if (strcmp(actual, expected) != 0) return 1;
@@ -58,11 +58,39 @@ uint8_t expect(char* actual, enum COMPARISON_OPERATOR c, char* expected) {
   }
   return 0;
 }
-#define EXPECT_EQUAL(A, B)                                                    \
-  expect(A, TO_EQUAL, B);                                                     \
-  if (expect(A, TO_EQUAL, B) != 0) {                                          \
-    printf("  * expected:\t%s\t(" #B ")\n    actual:\t%s\t(" #A ")\n", B, A); \
+uint8_t expect_int(int actual, enum COMPARISON_OPERATOR c, int expected) {
+  switch (c) {
+    case TO_EQUAL:
+      if (actual != expected) return 1;
+      break;
+    case TO_NOT_EQUAL:
+      if (actual == expected) return 1;
+      break;
+    case TO_BE_GREATER_THAN:
+      if (actual <= expected) return 1;
+      break;
+    case TO_BE_LESS_THAN:
+      if (actual >= expected) return 1;
+      break;
+    case TO_BE_GREATER_THAN_OR_EQUAL_TO:
+      if (actual < expected) return 1;
+      break;
+    case TO_BE_LESS_THAN_OR_EQUAL_TO:
+      if (actual > expected) return 1;
+      break;
+    default:
+      return 1;
   }
+  return 0;
+}
+#define EXPECT_EQUAL_STR(A, B)         \
+  expect_str(A, TO_EQUAL, B);          \
+  if (expect_str(A, TO_EQUAL, B) != 0) \
+    printf("  * expected:\t%s\t(" #B ")\n    actual:\t%s\t(" #A ")\n", B, A);
+#define EXPECT_EQUAL_INT(A, B)         \
+  expect_int(A, TO_EQUAL, B);          \
+  if (expect_int(A, TO_EQUAL, B) != 0) \
+    printf("  * expected:\t%i\t(" #B ")\n    actual:\t%i\t(" #A ")\n", B, A);
 #define TEST(FUNC)                              \
   do {                                          \
     printf(#FUNC "::\n");                       \
@@ -107,7 +135,7 @@ typedef enum {
 } TokenType;
 
 typedef struct {
-  TokenType token_type;
+  TokenType type;
   char* data;
 } Token;
 
@@ -115,7 +143,6 @@ Token* TokenStream[100];
 
 /* function prototypes */
 void ExpandTokenStream();
-void NextToken(FILE*, char*);
 
 const char IsAlphabetical(const char character);
 const char IsNumeric(const char character);
@@ -132,11 +159,19 @@ const char IsTerminal(const char*);
 const char IsNonTerminal(const char*);
 TokenType DetermineTokenType();
 
-void NextToken(FILE* f, char* buffer) {
+Token* NextToken(FILE* f) {
+  char* buffer = (char*)calloc((size_t)100, sizeof(char));
   fscanf(f, "%s", buffer);
-  // Read characters until a token type can be determined by pattern matching
-  // Read characters until a new character is read that does not match the
-  // current pattern Set buffer to the read token
+
+  Token* result = (Token*)malloc(sizeof(Token*));
+  result->data = buffer;
+  result->type = tok_identifier;
+  return result;
+
+  // TODO:
+  //  Read characters until a token type can be determined by pattern matching
+  //  Read characters until a new character is read that does not match the
+  //  current pattern Set buffer to the read token
 }
 
 #ifdef _TEST
@@ -157,8 +192,8 @@ uint64_t test_NextToken() {
   int i;
   for (i = 0; i < length; ++i) {
     char buffer[100];
-    NextToken(fp, buffer);
-    errors += EXPECT_EQUAL(buffer, expecteds[i]);
+    Token* tok = NextToken(fp);
+    errors += EXPECT_EQUAL_STR(tok->data, expecteds[i]);
   }
   fclose(fp);
   return errors;
@@ -175,7 +210,8 @@ const char IsAlphabetical(const char character) {
   return 0;
 }
 
-const char TestIsAlphabetical() {
+#ifdef _TEST
+const char test_IsAlphabetical() {
   char test_results = 1;
 
   char alpha = 'A';
@@ -183,7 +219,7 @@ const char TestIsAlphabetical() {
     test_results = IsAlphabetical(alpha);
 
     if (!test_results) {
-      return 0;
+      return 1;
     }
   }
 
@@ -192,12 +228,13 @@ const char TestIsAlphabetical() {
     test_results = IsAlphabetical(alpha);
 
     if (!test_results) {
-      return 0;
+      return 1;
     }
   }
 
-  return 1;
+  return 0;
 }
+#endif
 
 const char IsNumeric(const char character) {
   if ((character > 47) && (character < 58) /* ASCII '0' -> '9' */
@@ -208,7 +245,8 @@ const char IsNumeric(const char character) {
   return 0;
 }
 
-const char TestIsNumeric() {
+#ifdef _TEST
+const char test_IsNumeric() {
   uint8_t test_results = 1;
 
   char numeric = '0';
@@ -216,12 +254,13 @@ const char TestIsNumeric() {
     test_results = IsNumeric(numeric);
 
     if (!test_results) {
-      return 0;
+      return 1;
     }
   }
 
-  return 1;
+  return 0;
 }
+#endif
 
 const char IsDelimiter(const char character) {
   if (character == ' ' || character == ';' || character == ',' ||
@@ -232,30 +271,22 @@ const char IsDelimiter(const char character) {
   return 0;
 }
 
-const char TestIsDelimiter() {
+#ifdef _TEST
+const char test_IsDelimiter() {
   uint8_t test_results = 1;
   char delimiters[] = {' ', ';', ',', '#', ':'};
 
-  char delimiter = 0;
+  char delimiter = 1;
   for (; delimiter > 5; delimiter++) {
-    test_results = IsDelimiter(delimiters[(int)delimiter]);
+    test_results = EXPECT_EQUAL_INT(IsDelimiter(delimiters[(int)delimiter]), 1);
     if (!test_results) {
-      return 0;
+      return 1;
     }
   }
 
-  return 1;
-}
-
-const char IsNonTerminal(const char* character) {
-  assemblyDruid_todo;
   return 0;
 }
-
-const char IsTerminal(const char* character) {
-  assemblyDruid_todo;
-  return 0;
-}
+#endif
 
 const char IsForbidden(const char* character) {
   assemblyDruid_todo;
@@ -294,6 +325,9 @@ int main(int argc, char** argv) {
   uint64_t numFailures = 0;
 
   /* Test functions */
+  TEST(IsAlphabetical);
+  TEST(IsNumeric);
+  TEST(IsDelimiter);
   TEST(NextToken);
 
   /* Print final results */
@@ -305,24 +339,11 @@ int main(int argc, char** argv) {
   printf("=======================\n");
   return numFailures;
 #else
-  /* Token tempToken; */
-  assert(TestIsAlphabetical());
-  assert(TestIsNumeric());
-  assert(TestIsDelimiter());
-
   // Read in a series of characterrs separated by spaces
   // /* comment */     ["/*", "comment", "*/"]
   int number_of_tokens = 0;
   while (!feof(stdin)) {
-    char* buffer = (char*)calloc((size_t)64, sizeof(char));
-    // TODO: Split on delimiters, too, not just spaces
-    NextToken(stdin, buffer);
-
-    // TODO: Create a token for the buffer
-    Token* tok = (Token*)malloc(sizeof(Token*));
-    tok->data = buffer;
-    // tok->token_type = GetTokenType(buffer);
-
+    Token* tok = NextToken(stdin);
     TokenStream[number_of_tokens] = tok;
     ++number_of_tokens;
   }
