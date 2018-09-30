@@ -109,35 +109,46 @@ typedef enum {
   tok_none,
   /* Punctuation */
   // tok_dot,
-  tok_semicolon,
-  tok_colon,
-  tok_comment_multiline,
-  tok_comment,
-  tok_brace_open,
-  tok_brace_close,
-  tok_paren_open,
-  tok_paren_close,
-  tok_string,
-  tok_char,
+  tok_comma,              // ,
+  tok_semicolon,          // ;
+  tok_colon,              // :
+  tok_comment_multiline,  // /* */
+  tok_comment,            // //
+  tok_brace_open,         // {
+  tok_brace_close,        // }
+  tok_paren_open,         // (
+  tok_paren_close,        // )
+  tok_bracket_open,       // [
+  tok_bracket_close,      // ]
+  tok_string,             // " "
+  tok_char,               // ' '
   // tok_quote_double, // TODO: Can't we just have string/char instead?
   // tok_quote_single,
   /* Operators */
-  tok_equal,
-  tok_equal_double,
-  tok_minus,
-  tok_plus,
-  tok_asterisk,
-  tok_slash,
+  tok_equal,         // =
+  tok_equal_double,  // ==
+  tok_minus,         // -
+  tok_plus,          // +
+  tok_asterisk,      // *
+  tok_slash,         // /
   /* Keywords */
-  tok_return,
+  tok_return,  // return
   /* User definitions */
-  tok_identifier,
+  tok_identifier,  // [a-Z][a-Z0-9]
+  tok_integer,     // 0
+  tok_float,       // 0.0
 } TokenType;
 
 typedef struct {
   TokenType type;
   char* data;
 } Token;
+Token* new_Token(char* data, TokenType type) {
+  Token* tok = (Token*)malloc(sizeof(Token*));
+  tok->data = data;
+  tok->type = type;
+  return tok;
+}
 
 Token* TokenStream[100];
 
@@ -161,11 +172,40 @@ TokenType DetermineTokenType();
 
 Token* NextToken(FILE* f) {
   char* buffer = (char*)calloc((size_t)100, sizeof(char));
-  fscanf(f, "%s", buffer);
+  int i = 0;
 
-  Token* result = (Token*)malloc(sizeof(Token*));
+  Token* result = new_Token("", tok_none);
+
+  // Handle all single-character tokens first
+  buffer[i] = fgetc(f);
+  if (buffer[0] == ';') {
+    result->type = tok_semicolon;
+  } else if (buffer[0] == ':') {
+    result->type = tok_colon;
+  } else if (buffer[0] == '(') {
+    result->type = tok_paren_open;
+  } else if (buffer[0] == ')') {
+    result->type = tok_paren_close;
+  } else if (buffer[0] == '{') {
+    result->type = tok_brace_open;
+  } else if (buffer[0] == '}') {
+    result->type = tok_brace_close;
+  } else if (buffer[0] == '[') {
+    result->type = tok_bracket_open;
+  } else if (buffer[0] == ']') {
+    result->type = tok_bracket_close;
+  } else if (buffer[0] == ',') {
+    result->type = tok_comma;
+  }
+
+  if (result->type != tok_none) {
+    result->data = buffer;
+    return result;
+  }
+
+  // TODO: Debug,remove me
+  fscanf(f, "%s", buffer);
   result->data = buffer;
-  result->type = tok_identifier;
   return result;
 
   // TODO:
@@ -175,29 +215,39 @@ Token* NextToken(FILE* f) {
 }
 
 #ifdef _TEST
-uint64_t test_NextToken() {
-  char* inputs = "status func() {";
-  char* expecteds[5];
-  expecteds[0] = "status";
-  expecteds[1] = "func";
-  expecteds[2] = "(";
-  expecteds[3] = ")";
-  expecteds[4] = "{";
-
+uint64_t test_NextToken_case(char* inputs, Token* expecteds[], int length) {
   FILE* fp = fmemopen(inputs, strlen(inputs), "r");
   setbuf(fp, inputs);
 
-  int length = sizeof(expecteds) / sizeof(expecteds[0]);
   int errors = 0;
   int i;
   for (i = 0; i < length; ++i) {
     char buffer[100];
     Token* tok = NextToken(fp);
-    errors += EXPECT_EQUAL_STR(tok->data, expecteds[i]);
+    // TODO: EXPECT_EQUAL_TOKEN
+    errors += EXPECT_EQUAL_STR(tok->data, expecteds[i]->data);
+    errors += EXPECT_EQUAL_INT(tok->type, expecteds[i]->type);
   }
   fclose(fp);
   return errors;
 }
+uint64_t test_NextToken() {
+  int case1_length = 5;
+  Token* case1[case1_length];
+  case1[0] = new_Token("status", tok_identifier);
+  case1[1] = new_Token("func", tok_identifier);
+  case1[2] = new_Token("(", tok_paren_open);
+  case1[3] = new_Token(")", tok_paren_close);
+  case1[4] = new_Token("{", tok_brace_open);
+  int errors = test_NextToken_case("status func() {", case1, case1_length);
+
+  int case2_length = 1;
+  Token* case2[case2_length];
+  case2[0] = new_Token(",", tok_comma);
+  errors += test_NextToken_case(",", case2, case2_length);
+  return errors;
+}
+
 #endif
 
 const char IsAlphabetical(const char character) {
