@@ -6,7 +6,7 @@
 #include <string.h>
 
 #ifndef __GNUC__
-#deinfe __attribute__(x) /*nul*/
+#define __attribute__(x) /*nul*/
 #endif
 
 #ifndef mlstring /* mlstring -> "multi line string" */
@@ -58,6 +58,22 @@ uint8_t expect(char* actual, enum COMPARISON_OPERATOR c, char* expected) {
   }
   return 0;
 }
+#define EXPECT_EQUAL(A, B)                                                    \
+  expect(A, TO_EQUAL, B);                                                     \
+  if (expect(A, TO_EQUAL, B) != 0) {                                          \
+    printf("  * expected:\t%s\t(" #B ")\n    actual:\t%s\t(" #A ")\n", B, A); \
+  }
+#define TEST(FUNC)                              \
+  do {                                          \
+    printf(#FUNC "::\n");                       \
+    int errors = test_##FUNC();                 \
+    if (errors > 0)                             \
+      printf("-> FAILED: %i errors\n", errors); \
+    else                                        \
+      printf("-> PASS\n");                      \
+    printf("\n");                               \
+    numFailures += errors;                      \
+  } while (0)
 #endif
 
 typedef enum {
@@ -125,8 +141,6 @@ void NextToken(FILE* f, char* buffer) {
 
 #ifdef _TEST
 uint64_t test_NextToken() {
-  printf("NextToken::\n");
-
   char* inputs = "status func() {";
   char* expecteds[5];
   expecteds[0] = "status";
@@ -144,18 +158,9 @@ uint64_t test_NextToken() {
   for (i = 0; i < length; ++i) {
     char buffer[100];
     NextToken(fp, buffer);
-    int result = expect(buffer, TO_EQUAL, expecteds[i]);
-    if (result != 0) {
-      printf("  * expected: %s\n    actual:   %s\n", expecteds[i], buffer);
-    }
-    errors += result;
+    errors += EXPECT_EQUAL(buffer, expecteds[i]);
   }
   fclose(fp);
-  if (errors > 0)
-    printf("-> FAILED: %i errors\n", errors);
-  else
-    printf("-> PASS\n");
-  printf("\n");
   return errors;
 }
 #endif
@@ -285,9 +290,11 @@ const char TestIsForbidden() {
 
 int main(int argc, char** argv) {
 #ifdef _TEST
+  /* Used in TEST macros to track total test failures */
   uint64_t numFailures = 0;
 
-  numFailures += test_NextToken();
+  /* Test functions */
+  TEST(NextToken);
 
   /* Print final results */
   printf("\n=======================\n");
