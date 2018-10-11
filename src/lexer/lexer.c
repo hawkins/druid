@@ -175,6 +175,7 @@ Token* NextToken(FILE* f) {
   int i = 0;
 
   Token* result = new_Token("", tok_none);
+  result->data = buffer;
 
   // Handle all single-character tokens first
   buffer[i] = fgetc(f);
@@ -198,10 +199,55 @@ Token* NextToken(FILE* f) {
     result->type = tok_comma;
   }
 
+  // Handle possible early escape
   if (result->type != tok_none) {
-    result->data = buffer;
+    // result->data = buffer;
     return result;
   }
+
+  // Continue to read characters until a match is found
+  ++i;
+  do {
+    buffer[i] = fgetc(f);
+
+    // Comments
+    if (buffer[0] == '/') {
+      if (buffer[1] == '*') {
+        // Read until */ is found
+        do {
+          ++i;
+
+          if (i == 100) {
+            // Abandon with bad token
+            // result->data = buffer;
+            return result;
+          }
+
+          buffer[i] = fgetc(f);
+        } while (buffer[i - 1] != '*' && buffer[i] == '/');
+
+        result->type = tok_comment_multiline;
+        return result;
+      } else if (buffer[1] == '/') {
+        // Read until end of line is found
+        do {
+          ++i;
+
+          if (i == 100) {
+            // Abandon with bad token
+            // result->data = buffer;
+            return result;
+          }
+
+          buffer[i] = fgetc(f);
+        } while (buffer[i] != '\n');
+
+        result->type = tok_comment;
+        return result;
+      }
+    }
+    ++i;
+  } while (i < 100);
 
   // TODO: Debug,remove me
   fscanf(f, "%s", buffer);
