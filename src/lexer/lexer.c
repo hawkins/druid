@@ -15,9 +15,6 @@
 
 #ifndef TokenStreamSize
 #define TokenStreamSize (sizeof(TokenStream) / sizeof(TokenStream[0]))
-#endif
-
-#ifndef assemblyDruid_todo
 #define assemblyDruid_todo \
   printf("TODO\n");        \
   fflush(stdout);          \
@@ -158,6 +155,7 @@ void ExpandTokenStream();
 const char IsAlphabetical(const char character);
 const char IsNumeric(const char character);
 const char IsDelimiter(const char character);
+const char IsWhitespace(const char character);
 
 const char TestIsAlphabetical();
 
@@ -178,7 +176,10 @@ Token* NextToken(FILE* f) {
   result->data = buffer;
 
   // Handle all single-character tokens first
-  buffer[i] = fgetc(f);
+  do {
+    buffer[i] = fgetc(f);
+  } while (IsWhitespace(buffer[i]));
+
   if (buffer[0] == ';') {
     result->type = tok_semicolon;
   } else if (buffer[0] == ':') {
@@ -197,6 +198,8 @@ Token* NextToken(FILE* f) {
     result->type = tok_bracket_close;
   } else if (buffer[0] == ',') {
     result->type = tok_comma;
+  } else if (buffer[0] == '=') {
+    result->type = tok_equal;
   }
 
   // Handle possible early escape
@@ -208,7 +211,9 @@ Token* NextToken(FILE* f) {
   // Continue to read characters until a match is found
   ++i;
   do {
-    buffer[i] = fgetc(f);
+    do {
+      buffer[i] = fgetc(f);
+    } while (IsWhitespace(buffer[i]));
 
     // Comments
     if (buffer[0] == '/') {
@@ -224,7 +229,7 @@ Token* NextToken(FILE* f) {
           }
 
           buffer[i] = fgetc(f);
-        } while (buffer[i - 1] != '*' && buffer[i] == '/');
+        } while (buffer[i - 1] != '*' || buffer[i] != '/');
 
         result->type = tok_comment_multiline;
         return result;
@@ -240,11 +245,27 @@ Token* NextToken(FILE* f) {
           }
 
           buffer[i] = fgetc(f);
-        } while (buffer[i] != '\n');
+        } while (buffer[i] != '\n' && buffer[i] != EOF);
+        buffer[i] = '\0';
 
         result->type = tok_comment;
         return result;
       }
+    }
+
+    // Identifier
+    // [a-Z]([a-Z][0-9][_])*
+    if (IsAlphabetical(buffer[0])) {
+      // TODO: Correct this logic to fit above pattern
+      while (IsAlphabetical(buffer[i]) || IsNumeric(buffer[i]) ||
+             buffer[i] == '_') {
+        buffer[++i] = fgetc(f);
+      }
+      ungetc(buffer[i], f);
+      buffer[i] = '\0';
+
+      result->type = tok_identifier;
+      return result;
     }
     ++i;
   } while (i < 100);
@@ -262,6 +283,8 @@ Token* NextToken(FILE* f) {
 
 #ifdef _TEST
 uint64_t test_NextToken_case(char* inputs, Token* expecteds[], int length) {
+  printf("  case: %s\n", inputs);
+
   FILE* fp = fmemopen(inputs, strlen(inputs), "r");
   setbuf(fp, inputs);
 
@@ -291,6 +314,21 @@ uint64_t test_NextToken() {
   Token* case2[case2_length];
   case2[0] = new_Token(",", tok_comma);
   errors += test_NextToken_case(",", case2, case2_length);
+
+  int case3_length = 1;
+  Token* case3[case3_length];
+  case3[0] = new_Token("/* test  */", tok_comment_multiline);
+  errors += test_NextToken_case("/* test  */", case3, case3_length);
+
+  int case4_length = 6;
+  Token* case4[case4_length];
+  case4[0] = new_Token("a", tok_identifier);
+  case4[1] = new_Token("=", tok_equal);
+  case4[2] = new_Token("b", tok_identifier);
+  case4[3] = new_Token("(", tok_paren_open);
+  case4[4] = new_Token(")", tok_paren_close);
+  case4[5] = new_Token("// do", tok_comment);
+  errors += test_NextToken_case("a = b() // do", case4, case4_length);
   return errors;
 }
 
@@ -383,6 +421,11 @@ const char test_IsDelimiter() {
   return 0;
 }
 #endif
+
+const char IsWhitespace(const char character) {
+  if (character == ' ' || character == '\t' || character == '\n') return 1;
+  return 0;
+}
 
 const char IsForbidden(const char* character) {
   assemblyDruid_todo;
