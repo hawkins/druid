@@ -198,9 +198,10 @@ Token* NextToken(FILE* f) {
     result->type = tok_bracket_close;
   } else if (buffer[0] == ',') {
     result->type = tok_comma;
-  } else if (buffer[0] == '=') {
-    result->type = tok_equal;
-  } else if (buffer[0] == '-') {
+  } /* else if (buffer[0] == '=') {
+     result->type = tok_equal;
+   } */
+  else if (buffer[0] == '-') {
     result->type = tok_minus;
   } else if (buffer[0] == '+') {
     result->type = tok_plus;
@@ -208,6 +209,7 @@ Token* NextToken(FILE* f) {
     result->type = tok_asterisk;
   }
   // Note we can't return tok_slash yet because it could be a comment
+  // Similarly, tok_equal could be tok_equal_double
 
   // Handle possible early escape
   if (result->type != tok_none) {
@@ -221,6 +223,19 @@ Token* NextToken(FILE* f) {
     do {
       buffer[i] = fgetc(f);
     } while (IsWhitespace(buffer[i]));
+
+    // Equality
+    if (buffer[0] == '=') {
+      if (buffer[1] == '=') {
+        result->type = tok_equal_double;
+      } else {
+        result->type = tok_equal;
+
+        ungetc(buffer[1], f);
+        buffer[1] = '\0';
+      }
+      return result;
+    }
 
     // Numbers
     if (IsNumeric(buffer[0])) {
