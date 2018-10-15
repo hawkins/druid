@@ -299,10 +299,41 @@ Token* NextToken(FILE* f) {
       }
     }
 
+    // Strings
+    if (buffer[0] == '\"') {
+      result->type = tok_string;
+
+      // TODO: I'm pretty sure this escape logic is flawed, fix it
+      do {
+        buffer[++i] = fgetc(f);
+      } while (buffer[i] != EOF &&
+               (buffer[i - 1] != '\\' || buffer[i] != '\"'));
+      if (buffer[i] == EOF) {
+        buffer[i] = '\0';
+      }
+
+      return result;
+    }
+
+    // Characters
+    if (buffer[0] == '\'') {
+      if (buffer[1] == '\\') {
+        buffer[++i] = fgetc(f);
+      }
+      buffer[++i] = fgetc(f);
+
+      if (buffer[i] == '\'') {
+        result->type = tok_char;
+        return result;
+      } else {
+        result->type = tok_none;
+        return result;
+      }
+    }
+
     // Identifier
     // [a-Z]([a-Z][0-9][_])*
     if (IsAlphabetical(buffer[0])) {
-      // TODO: Correct this logic to fit above pattern
       while (IsAlphabetical(buffer[i]) || IsNumeric(buffer[i]) ||
              buffer[i] == '_') {
         buffer[++i] = fgetc(f);
@@ -317,14 +348,10 @@ Token* NextToken(FILE* f) {
   } while (i < 100);
 
   // TODO: Debug,remove me
+  printf("NO TOKEN MATCHED! Buffer: %s\n", buffer);
   fscanf(f, "%s", buffer);
   result->data = buffer;
   return result;
-
-  // TODO:
-  //  Read characters until a token type can be determined by pattern matching
-  //  Read characters until a new character is read that does not match the
-  //  current pattern Set buffer to the read token
 }
 
 #ifdef _TEST
@@ -382,6 +409,14 @@ uint64_t test_NextToken() {
   case5[1] = new_Token("5", tok_integer);
   case5[2] = new_Token("//", tok_comment);
   errors += test_NextToken_case("/5//", case5, case5_length);
+
+  int case6_length = 3;
+  Token* case6[case6_length];
+  case6[0] = new_Token("\'a\'", tok_char);
+  case6[1] = new_Token("\'\\t\'", tok_char);
+  case6[2] = new_Token("\"kitten\"", tok_string);
+  errors +=
+      test_NextToken_case("\'a\' \'\\t\' \"kitten\"", case6, case6_length);
 
   return errors;
 }
