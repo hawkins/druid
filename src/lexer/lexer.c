@@ -200,7 +200,14 @@ Token* NextToken(FILE* f) {
     result->type = tok_comma;
   } else if (buffer[0] == '=') {
     result->type = tok_equal;
+  } else if (buffer[0] == '-') {
+    result->type = tok_minus;
+  } else if (buffer[0] == '+') {
+    result->type = tok_plus;
+  } else if (buffer[0] == '*') {
+    result->type = tok_asterisk;
   }
+  // Note we can't return tok_slash yet because it could be a comment
 
   // Handle possible early escape
   if (result->type != tok_none) {
@@ -214,6 +221,24 @@ Token* NextToken(FILE* f) {
     do {
       buffer[i] = fgetc(f);
     } while (IsWhitespace(buffer[i]));
+
+    // Numbers
+    if (IsNumeric(buffer[0])) {
+      result->type = tok_integer;
+
+      while (IsNumeric(buffer[i])) {
+        buffer[++i] = fgetc(f);
+      }
+      if (buffer[i] == '.') {
+        result->type = tok_float;
+        while (IsNumeric(buffer[i])) {
+          buffer[++i] = fgetc(f);
+        }
+      }
+      ungetc(buffer[i], f);
+      buffer[i] = '\0';
+      return result;
+    }
 
     // Comments
     if (buffer[0] == '/') {
@@ -249,6 +274,12 @@ Token* NextToken(FILE* f) {
         buffer[i] = '\0';
 
         result->type = tok_comment;
+        return result;
+      } else {
+        // This was a tok_slash and not a comment
+        ungetc(buffer[i], f);
+        buffer[i] = '\0';
+        result->type = tok_slash;
         return result;
       }
     }
@@ -329,6 +360,14 @@ uint64_t test_NextToken() {
   case4[4] = new_Token(")", tok_paren_close);
   case4[5] = new_Token("// do", tok_comment);
   errors += test_NextToken_case("a = b() // do", case4, case4_length);
+
+  int case5_length = 3;
+  Token* case5[case5_length];
+  case5[0] = new_Token("/", tok_slash);
+  case5[1] = new_Token("5", tok_integer);
+  case5[2] = new_Token("//", tok_comment);
+  errors += test_NextToken_case("/5//", case5, case5_length);
+
   return errors;
 }
 
