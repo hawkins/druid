@@ -1,5 +1,0 @@
-status echo()
-{
-  return(status:success);
-}
-
