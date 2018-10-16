@@ -21,86 +21,6 @@
   assert(0)
 #endif
 
-#ifdef _TEST
-enum COMPARISON_OPERATOR {
-  TO_EQUAL,
-  TO_NOT_EQUAL,
-  TO_BE_GREATER_THAN,
-  TO_BE_LESS_THAN,
-  TO_BE_GREATER_THAN_OR_EQUAL_TO,
-  TO_BE_LESS_THAN_OR_EQUAL_TO
-};
-uint8_t expect_str(char* actual, enum COMPARISON_OPERATOR c, char* expected) {
-  switch (c) {
-    case TO_EQUAL:
-      if (strcmp(actual, expected) != 0) return 1;
-      break;
-    case TO_NOT_EQUAL:
-      if (strcmp(actual, expected) == 0) return 1;
-      break;
-    case TO_BE_GREATER_THAN:
-      if (strcmp(actual, expected) <= 0) return 1;  // TODO: Check this
-      break;
-    case TO_BE_LESS_THAN:
-      if (strcmp(actual, expected) >= 0) return 1;  // TODO: Check this
-      break;
-    case TO_BE_GREATER_THAN_OR_EQUAL_TO:
-      if (strcmp(actual, expected) < 0) return 1;
-      break;
-    case TO_BE_LESS_THAN_OR_EQUAL_TO:
-      if (strcmp(actual, expected) > 0) return 1;
-      break;
-    default:
-      return 1;
-  }
-  return 0;
-}
-uint8_t expect_int(int actual, enum COMPARISON_OPERATOR c, int expected) {
-  switch (c) {
-    case TO_EQUAL:
-      if (actual != expected) return 1;
-      break;
-    case TO_NOT_EQUAL:
-      if (actual == expected) return 1;
-      break;
-    case TO_BE_GREATER_THAN:
-      if (actual <= expected) return 1;
-      break;
-    case TO_BE_LESS_THAN:
-      if (actual >= expected) return 1;
-      break;
-    case TO_BE_GREATER_THAN_OR_EQUAL_TO:
-      if (actual < expected) return 1;
-      break;
-    case TO_BE_LESS_THAN_OR_EQUAL_TO:
-      if (actual > expected) return 1;
-      break;
-    default:
-      return 1;
-  }
-  return 0;
-}
-#define EXPECT_EQUAL_STR(A, B)         \
-  expect_str(A, TO_EQUAL, B);          \
-  if (expect_str(A, TO_EQUAL, B) != 0) \
-    printf("  * expected:\t%s\t(" #B ")\n    actual:\t%s\t(" #A ")\n", B, A);
-#define EXPECT_EQUAL_INT(A, B)         \
-  expect_int(A, TO_EQUAL, B);          \
-  if (expect_int(A, TO_EQUAL, B) != 0) \
-    printf("  * expected:\t%i\t(" #B ")\n    actual:\t%i\t(" #A ")\n", B, A);
-#define TEST(FUNC)                              \
-  do {                                          \
-    printf(#FUNC "::\n");                       \
-    int errors = test_##FUNC();                 \
-    if (errors > 0)                             \
-      printf("-> FAILED: %i errors\n", errors); \
-    else                                        \
-      printf("-> PASS\n");                      \
-    printf("\n");                               \
-    numFailures += errors;                      \
-  } while (0)
-#endif
-
 typedef enum {
   /* Feedback */
   tok_none,
@@ -354,7 +274,149 @@ Token* NextToken(FILE* f) {
   return result;
 }
 
+const char IsAlphabetical(const char character) {
+  if (((character > 64) && (character < 91)) || /* ASCII 'A' -> 'Z' */
+      ((character > 96) && (character < 123))   /* ASCII 'a' -> 'z' */
+  ) {
+    return 1;
+  }
+
+  return 0;
+}
+
+const char IsNumeric(const char character) {
+  if ((character > 47) && (character < 58) /* ASCII '0' -> '9' */
+  ) {
+    return 1;
+  }
+
+  return 0;
+}
+
+const char IsDelimiter(const char character) {
+  if (character == ' ' || character == ';' || character == ',' ||
+      character == '#' || character == ':') {
+    return 1;
+  }
+
+  return 0;
+}
+
+const char IsWhitespace(const char character) {
+  if (character == ' ' || character == '\t' || character == '\n') return 1;
+  return 0;
+}
+
+const char IsForbidden(const char* character) {
+  assemblyDruid_todo;
+  return 0;
+}
+
+const char IsOperator(const char* character) {
+  assemblyDruid_todo;
+  return 0;
+}
+
+const char IsKeyword(const char* p_character) {
+  /* [ assemblyDruid::TODO ] string internment? */
+  assemblyDruid_todo;
+  return 0;
+}
+
+const char TestIsKeyword() {
+  assemblyDruid_todo;
+  return 0;
+}
+
+const char TestIsOperator() {
+  assemblyDruid_todo;
+  return 0;
+}
+
+const char TestIsForbidden() {
+  assemblyDruid_todo;
+  return 0;
+}
+
 #ifdef _TEST
+enum COMPARISON_OPERATOR {
+  TO_EQUAL,
+  TO_NOT_EQUAL,
+  TO_BE_GREATER_THAN,
+  TO_BE_LESS_THAN,
+  TO_BE_GREATER_THAN_OR_EQUAL_TO,
+  TO_BE_LESS_THAN_OR_EQUAL_TO
+};
+uint8_t expect_str(char* actual, enum COMPARISON_OPERATOR c, char* expected) {
+  switch (c) {
+    case TO_EQUAL:
+      if (strcmp(actual, expected) != 0) return 1;
+      break;
+    case TO_NOT_EQUAL:
+      if (strcmp(actual, expected) == 0) return 1;
+      break;
+    case TO_BE_GREATER_THAN:
+      if (strcmp(actual, expected) <= 0) return 1;  // TODO: Check this
+      break;
+    case TO_BE_LESS_THAN:
+      if (strcmp(actual, expected) >= 0) return 1;  // TODO: Check this
+      break;
+    case TO_BE_GREATER_THAN_OR_EQUAL_TO:
+      if (strcmp(actual, expected) < 0) return 1;
+      break;
+    case TO_BE_LESS_THAN_OR_EQUAL_TO:
+      if (strcmp(actual, expected) > 0) return 1;
+      break;
+    default:
+      return 1;
+  }
+  return 0;
+}
+uint8_t expect_int(int actual, enum COMPARISON_OPERATOR c, int expected) {
+  switch (c) {
+    case TO_EQUAL:
+      if (actual != expected) return 1;
+      break;
+    case TO_NOT_EQUAL:
+      if (actual == expected) return 1;
+      break;
+    case TO_BE_GREATER_THAN:
+      if (actual <= expected) return 1;
+      break;
+    case TO_BE_LESS_THAN:
+      if (actual >= expected) return 1;
+      break;
+    case TO_BE_GREATER_THAN_OR_EQUAL_TO:
+      if (actual < expected) return 1;
+      break;
+    case TO_BE_LESS_THAN_OR_EQUAL_TO:
+      if (actual > expected) return 1;
+      break;
+    default:
+      return 1;
+  }
+  return 0;
+}
+#define EXPECT_EQUAL_STR(A, B)         \
+  expect_str(A, TO_EQUAL, B);          \
+  if (expect_str(A, TO_EQUAL, B) != 0) \
+    printf("  * expected:\t%s\t(" #B ")\n    actual:\t%s\t(" #A ")\n", B, A);
+#define EXPECT_EQUAL_INT(A, B)         \
+  expect_int(A, TO_EQUAL, B);          \
+  if (expect_int(A, TO_EQUAL, B) != 0) \
+    printf("  * expected:\t%i\t(" #B ")\n    actual:\t%i\t(" #A ")\n", B, A);
+#define TEST(FUNC)                              \
+  do {                                          \
+    printf(#FUNC "::\n");                       \
+    int errors = test_##FUNC();                 \
+    if (errors > 0)                             \
+      printf("-> FAILED: %i errors\n", errors); \
+    else                                        \
+      printf("-> PASS\n");                      \
+    printf("\n");                               \
+    numFailures += errors;                      \
+  } while (0)
+
 uint64_t test_NextToken_case(char* inputs, Token* expecteds[], int length) {
   printf("  case: %s\n", inputs);
 
@@ -421,19 +483,6 @@ uint64_t test_NextToken() {
   return errors;
 }
 
-#endif
-
-const char IsAlphabetical(const char character) {
-  if (((character > 64) && (character < 91)) || /* ASCII 'A' -> 'Z' */
-      ((character > 96) && (character < 123))   /* ASCII 'a' -> 'z' */
-  ) {
-    return 1;
-  }
-
-  return 0;
-}
-
-#ifdef _TEST
 const char test_IsAlphabetical() {
   char test_results = 1;
 
@@ -457,18 +506,7 @@ const char test_IsAlphabetical() {
 
   return 0;
 }
-#endif
 
-const char IsNumeric(const char character) {
-  if ((character > 47) && (character < 58) /* ASCII '0' -> '9' */
-  ) {
-    return 1;
-  }
-
-  return 0;
-}
-
-#ifdef _TEST
 const char test_IsNumeric() {
   uint8_t test_results = 1;
 
@@ -483,18 +521,7 @@ const char test_IsNumeric() {
 
   return 0;
 }
-#endif
 
-const char IsDelimiter(const char character) {
-  if (character == ' ' || character == ';' || character == ',' ||
-      character == '#' || character == ':') {
-    return 1;
-  }
-
-  return 0;
-}
-
-#ifdef _TEST
 const char test_IsDelimiter() {
   uint8_t test_results = 1;
   char delimiters[] = {' ', ';', ',', '#', ':'};
@@ -509,46 +536,8 @@ const char test_IsDelimiter() {
 
   return 0;
 }
-#endif
-
-const char IsWhitespace(const char character) {
-  if (character == ' ' || character == '\t' || character == '\n') return 1;
-  return 0;
-}
-
-const char IsForbidden(const char* character) {
-  assemblyDruid_todo;
-  return 0;
-}
-
-const char IsOperator(const char* character) {
-  assemblyDruid_todo;
-  return 0;
-}
-
-const char IsKeyword(const char* p_character) {
-  /* [ assemblyDruid::TODO ] string internment? */
-  assemblyDruid_todo;
-  return 0;
-}
-
-const char TestIsKeyword() {
-  assemblyDruid_todo;
-  return 0;
-}
-
-const char TestIsOperator() {
-  assemblyDruid_todo;
-  return 0;
-}
-
-const char TestIsForbidden() {
-  assemblyDruid_todo;
-  return 0;
-}
 
 int main(int argc, char** argv) {
-#ifdef _TEST
   /* Used in TEST macros to track total test failures */
   uint64_t numFailures = 0;
 
@@ -566,7 +555,11 @@ int main(int argc, char** argv) {
     printf("PASS: All tests succeeded! Hooray!\n");
   printf("=======================\n");
   return numFailures;
+}
+
 #else
+
+int main(int argc, char** argv) {
   // Read in a series of characterrs separated by spaces
   // /* comment */     ["/*", "comment", "*/"]
   int number_of_tokens = 0;
@@ -582,5 +575,5 @@ int main(int argc, char** argv) {
 
   printf("\n[ SUCCESS ]\n");
   return 0;
-#endif
 }
+#endif
