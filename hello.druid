@@ -1,7 +1,3 @@
-#summon stdio
-#summon math
-#summon dataCube
-
 /* comment */
 
 status entry_point()
@@ -12,7 +8,7 @@ status entry_point()
     }
     
     stdout("Hello world!\n");
-    stdout("Fibb of %d: %d\n", 9, math::fib(9));
+    stdout("Fibb of %d: %d\n", 9, math:fib(9));
     
     data_cube = conjure(DataCube);
     data_cube:print_data();
@@ -21,34 +17,20 @@ status entry_point()
     return(status:success);
 }
 
-/*
 
-Expected Tokens:
-<"token">, <TokenType>
----------------------
-"status", keyword
-"entry_point", operator
-"(", delimiter
-")", delimiter
-{, delimiter
-"if", keyword
-"(", delimiter
-"g", keyword
-":", delimiter
-"count", compound
-")", delimiter
-"{", delimiter
-"// do stuff", alphabetical
-"}", delimiter
-"stdout", keyword
-"(", delimiter
-""", delimiter
-"Hello world!\n", alphabetical
-""", delimiter
-")", delimiter
-";", delimiter
-"stdout", keyword
-"(", delimiter
-""", delimiter
 
-*/
+///////////////////////
+
+/* comment */
+status
+entry_point
+(
+)
+{
+if
+(
+g
+:
+count
+)
+
