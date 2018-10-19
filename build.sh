@@ -1,1 +1,1 @@
-gcc -g lexer.c -o lexer -Wall -pedantic -Werror -std=c89
+gcc -g druid.c -o druid -Wall -pedantic -D_TEST

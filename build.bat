@@ -35,7 +35,7 @@ IF %ERRORLEVEL% NEQ 0 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\
 
 :: "%~1" prefix the first command line arg with the string "..\..\"
 :: and remove quotations before seinding it as an argument to cl.
-cl "lexer.c" -Z7 /GS /MD /EHsc /nologo ^
+cl "druid.c" -Z7 /GS /MD /EHsc /nologo ^
 /link /NXCOMPAT /MACHINE:x86 /NODEFAULTLIB:MSVCRTD
 ::/LIBPATH: user32.lib
 ::gdi32.lib ^
