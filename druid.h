@@ -38,7 +38,7 @@
 // [ assemblyDruid ] osx version of above macro; use #if __APPLE__
 
 #ifndef quick_del
-#define quick_del(x) if(x) { free(x); }
+#define quick_del(x) if((x) && ((x) != NULL)) { free(x); }
 #endif // quick_del
 
 typedef enum
@@ -69,8 +69,8 @@ typedef struct
     char* key;
     char* value;
 
-    ssize_t key_buffer_len;
-    ssize_t value_buffer_len;
+    size_t key_buffer_len;
+    size_t value_buffer_len;
 } char_char_dict;
 
 typedef struct
@@ -78,14 +78,14 @@ typedef struct
     struct temporary_file_information
     {
         char*   file_buffer;
-        ssize_t total_file_size;
+        size_t  total_file_size;
         FILE*   file_stream;
     } temp;
 
     char_char_dict** tome_entries;
 
-    ssize_t tome_entries_buffer_len; // allocation/reallocation
-    ssize_t num_tome_entries; // iteration
+    size_t tome_entries_buffer_len; // allocation/reallocation
+    size_t num_tome_entries; // iteration
 } TOME;
 
 #ifndef mlstring // multi_line_string

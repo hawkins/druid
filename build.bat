@@ -32,7 +32,7 @@ popd
 
 :: "%~1" prefix the first command line arg with the string "..\..\"
 :: and remove quotations before seinding it as an argument to cl.
-cl %~1 /W3 /WX /Za -Z7 /GS /MD /EHsc /nologo /link /NXCOMPAT /MACHINE:x86 /NODEFAULTLIB:MSVCRTD
+cl druid.c /W3 /WX /Za -Z7 /GS /MD /EHsc /nologo /link /NXCOMPAT /MACHINE:x86 /NODEFAULTLIB:MSVCRTD
 ::/LIBPATH: user32.lib
 ::gdi32.lib ^
 ::shell32.lib ^

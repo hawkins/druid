@@ -120,12 +120,12 @@ bool preprocess(TOME* const tome)
     //   1. Deterimine what kind of directive we are dealing with. Right now, this is just "summon"
     //   2. Pass this directive to "apply()" so that magical stuff can happen.
 
-    char*  file_buffer;
-    char*  file_name;
-    size_t total_file_size;
-    FILE*  file_stream;
+    char*  file_buffer = NULL;
+    char*  file_name = NULL;
+    size_t total_file_size = 0;
+    FILE*  file_stream = NULL;
 
-    for (ssize_t i = 0; i < tome->num_tome_entries; i++ )
+    for (size_t i = 0; i < tome->num_tome_entries; i++ )
     {
         quick_del(file_buffer);
         quick_del(file_name);
@@ -159,7 +159,7 @@ bool preprocess(TOME* const tome)
         else
         {
             // [ assemblyDruid::TODO ] unified system for error handling 
-            printf("[ FATAL ] Could not open the file.\n");
+            dbgPrint("[ FATAL ] Could not open the file.\n");
             assert(0);
         }
 
@@ -246,7 +246,7 @@ bool preprocess(TOME* const tome)
                     // [ assemblyDruid::TODO ] handle EOF case (no newline) 
                     if ((cursor_position == (total_file_size -1)) && (!newline_found))
                     {
-                        printf("[ FATAL ] No newline following directive\n");
+                        dbgPrint("[ FATAL ] No newline following directive\n");
                         assert(0);
                     }
                     // cursor_position = line_position_start; 
@@ -291,7 +291,7 @@ addTomeEntry(TOME* const tome, char_char_dict* const entry)
             }
             else
             {
-                printf("[ FATAL ] Unable to resize tome_entry block.\n");
+                dbgPrint("[ FATAL ] Unable to resize tome_entry block.\n");
                 assert(0);
             }
         }
@@ -313,15 +313,16 @@ processTome(TOME* const tome)
     // with the filename "tome->druid"
 
     quick_del(tome->temp.file_buffer);
-    fclose(tome->temp.file_stream);
     tome->temp.total_file_size = 0;
+    dbgPrint("\tTome cleaned.\n");
         
 #if _WIN32
 #pragma warning(push)
 #pragma warning( disable: 4996 )
 #endif // _WIN32
                         
-    tome->temp.file_stream = fopen("tome->druid", "r" );
+    tome->temp.file_stream = fopen("tome", "r" );
+    dbgPrint("\tOpened file stream 'tome'.\n");
     
 #if _WIN32
 #pragma warning(push)
@@ -338,38 +339,47 @@ processTome(TOME* const tome)
               sizeof(char),
               tome->temp.total_file_size,
               tome->temp.file_stream);
+        dbgPrint("\tFile size determiend.\n");
     }
     else
     {
         // [ assemblyDruid::TODO ] unified system for error handling
-        printf("[ FATAL ] Unable to locate a tome file for this project.\n");
+        dbgPrint("[ FATAL ] Unable to locate a tome file for this project.\n");
         assert(0);
     }
 
-    printf("tome file:\n%s", tome->temp.file_buffer);
+    dbgPrint("\tTome file contents:\n%s\n", tome->temp.file_buffer);
     
-    ssize_t line_start = 0;
-    ssize_t line_number = 0;
-    for (ssize_t file_index = 0; file_index < tome->temp.total_file_size; file_index++)
+    size_t line_start = 0;
+    size_t line_number = 0;
+    size_t  zero_corrected_prev_comment_char_position = 0;
+
+    for (size_t file_index = 0; file_index < tome->temp.total_file_size; file_index++)
     {
-        ssize_t comment_one = 0;
-        bool    comment_one_at_zero_index = false;
-        bool    discard_line = false;
-        char    _char = tome->temp.file_buffer[file_index];
+        char _char = tome->temp.file_buffer[file_index];
+        bool discard_line = false;
 
         // check for comments
+        size_t zero_corrected_file_index = file_index + 1;
         if (_char == '/')
         {
-            if (file_index == 0)
+            if (!discard_line)
             {
-                comment_one_at_zero_index = true;
-            }
-
-            if (comment_one || comment_one_at_zero_index)
-            {
-                discard_line = true;
-                comment_one = 0;
-                comment_one_at_zero_index = false;
+                if (zero_corrected_prev_comment_char_position)
+                {
+                    if (zero_corrected_file_index - zero_corrected_prev_comment_char_position == 1)
+                    {
+                        discard_line = true;
+                        /* dbgPrint("\tComment found on line %zd. discard_line set to [ true ]\n", line_number); */
+                    }
+                    
+                    zero_corrected_prev_comment_char_position = 0;
+                }
+                else
+                {
+                    zero_corrected_prev_comment_char_position = zero_corrected_file_index;
+                    /* dbgPrint("\tFound an initial comment char at position: %zd\n", file_index); */
+                }
             }
         }
 
@@ -378,48 +388,55 @@ processTome(TOME* const tome)
         {
             char_char_dict* temp_entry;
 
-            if (discard_line)
+            if (!discard_line)
             {
-                discard_line = false;
-            }
-            else
-            {
-                bool at_symbol_found_on_this_line = false;
-                ssize_t at_symbol_index = 0;
-                ssize_t num_non_space_characters_preceeding_at_sign = 0;
+                bool   at_symbol_found_on_this_line = false;
+                size_t at_symbol_index = 0;
+                size_t num_non_space_characters_preceeding_at_sign = 0;
 
-                for (ssize_t sub_index = line_start;
+                for (size_t sub_index = line_start;
                      sub_index < file_index;
                      sub_index++)
                 {
                     if (tome->temp.file_buffer[sub_index] == '@')
                     {
+                        dbgPrint("\t'@' found on line %zd.\n", line_number);
                         if (at_symbol_found_on_this_line)
                         {
-                            printf("[ FATAL ] Only one spell is allowed per tome line.\n");
+                            dbgPrint("[ FATAL ] Only one spell is allowed per tome line.\n");
                             assert(0);
                         }
                         else
                         {
                             at_symbol_index = sub_index;
-
+                            
+                            dbgPrint("\tAllocating memory for new char_char_dict.\n");
+                                
                             temp_entry = (char_char_dict*) malloc(sizeof(char_char_dict));
                             temp_entry->key_buffer_len = (sub_index - line_start);
                             temp_entry->key =
-                                (char*) malloc(num_non_space_characters_preceeding_at_sign *
-                                               sizeof(char));
+                                (char*) calloc(num_non_space_characters_preceeding_at_sign, sizeof(char));
 
-                            ssize_t temp_entry_index = 0;
-                            for (ssize_t super_sub_index = line_start;
+                            size_t temp_entry_index = 0;
+                            for (size_t super_sub_index = line_start;
                                  super_sub_index < at_symbol_index;
                                  super_sub_index++)
                             {
                                 if (tome->temp.file_buffer[super_sub_index] != ' ')
                                 {
-                                    temp_entry->key[temp_entry_index] = super_sub_index;
+                                    temp_entry->key[temp_entry_index] = tome->temp.file_buffer[super_sub_index];
                                     temp_entry_index++;
                                 }
                             }
+
+                            //
+                            //
+                            // [ assemblyDruid::REMEMBER ]
+                            // Pickig up '@' in lines that should be ignored.
+                            //
+                            //
+                            
+                            dbgPrint("\tAdded key { %s } to tome.\n", temp_entry->key);
                         }
                     }
                     
@@ -433,9 +450,9 @@ processTome(TOME* const tome)
                     {
                         char* non_space_value_character_buffer =
                             (char*) malloc((file_index - at_symbol_index) * sizeof(char));
-                        ssize_t non_space_value_characters = 0;
+                        size_t non_space_value_characters = 0;
                         
-                        for (ssize_t super_sub_index = at_symbol_index;
+                        for (size_t super_sub_index = at_symbol_index;
                              super_sub_index < file_index;
                              super_sub_index++)
                         {
@@ -450,7 +467,7 @@ processTome(TOME* const tome)
 
                         temp_entry->value_buffer_len = non_space_value_characters;
                         temp_entry->value = (char*) malloc(non_space_value_characters * sizeof(char));
-                        for(int temp_value_index = 0;
+                        for(size_t temp_value_index = 0;
                             temp_value_index < non_space_value_characters;
                             temp_value_index++)
                         {
@@ -459,8 +476,11 @@ processTome(TOME* const tome)
                         }
 
                         quick_del(non_space_value_character_buffer);
-
+                        
                         addTomeEntry(tome, temp_entry);
+                        dbgPrint("\tAdded tome entry: {key: %s, value: %s}\n",
+                                 temp_entry->key,
+                                 temp_entry->value);
                     }
                 }
             }
@@ -479,7 +499,7 @@ main(int argc, char** argv)
 {
     for (int i = 0; i < argc; i++)
     {
-        printf("argv[%d]: %s\n", i, argv[i]);
+        dbgPrint("argv[%d]: %s\n", i, argv[i]);
     }
 
     //
@@ -488,7 +508,25 @@ main(int argc, char** argv)
     TOME tome;
     tome.tome_entries_buffer_len = 0;
     tome.num_tome_entries = 0;
+    tome.temp.file_buffer = NULL;
+    tome.temp.total_file_size = 0;
+    tome.temp.file_stream = NULL;
+
+    dbgPrint("Processing tome...\n");
     processTome(&tome);
+
+    // [ assemblyDruid::DEBUG ]
+    dbgPrint("tome has %zd entries at %zd bytes\n", tome.num_tome_entries, tome.tome_entries_buffer_len);
+    /* for (size_t tome_index = 0; tome_index < tome.num_tome_entries; tome_index++) */
+    /* { */
+    /*     dbgPrint("tome entry %zd of %zd: {key: %s, value: %s}\n", */
+    /*            tome_index, */
+    /*            tome.num_tome_entries, */
+    /*            tome.tome_entries[tome_index].key, */
+    /*            tome.tome_entries[tome_index].value); */
+    /* } */
+
+    dbgPrint("Preprocessing tome entries...\n");
     preprocess(&tome);
 
     //
@@ -498,5 +536,5 @@ main(int argc, char** argv)
     assert(TestIsNumeric());
     assert(TestIsDelimiter());
 
-    printf("\n[ SUCCESS ]\n");
+    dbgPrint("\n[ SUCCESS ]\n");
 }
