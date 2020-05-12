@@ -2,91 +2,16 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
-#include <assert.h>
-#include <math.h>
 
-#define uint64 uint64_t
-#define uint32 uint32_t
-#define uint16 uint16_t
-#define uint8  uint8_t
-#define real64 double
-#define real32 float
+#include <debug_tools.h>
+#include <macro_tools.h>
+#include <type_tools.h>
+#include <preprocessor_tools.h>
+
 
 #ifndef DRUID_DEBUG
 #define DRUID_DEBUG 1
 #endif // DRUID_DEBUG
-
-#if _WIN32 || __MINGW32__
-#ifndef dbgPrint
-#if DRUID_DEBUG 
-#define dbgPrint(_str, ...) printf(_str, __VA_ARGS__)
-#else
-#define dbgPrint(x) // dbgPrint(x)
-#endif // DRUID_DEBUG
-#endif // dbgPrint
-#endif // WIN32 || __MINGW32__
-
-#if __linux__
-#ifndef dbgPrint
-#if DRUID_DEBUG 
-#define dbgPrint(_str, ...) printf(_str, ##__VA_ARGS__)
-#else
-#define dbgPrint(x) // dbgPrint(x)
-#endif // DRUID_DEBUG
-#endif // dbgPrint
-#endif // __linux__
-// [ assemblyDruid ] osx version of above macro; use #if __APPLE__
-
-#ifndef quick_del
-#define quick_del(x) if((x) && ((x) != NULL)) { free(x); }
-#endif // quick_del
-
-typedef enum
-    {
-        false = 0,
-        true =  1
-    } bool;
-
-typedef enum
-    {
-        directive_none,
-        directive_summon,
-        directive_custom
-    } PreprocessingDirective;
-
-// [ assemblyDruid::TODO ] wrote a lot of code in main() that should be constructing these.
-// Either construct them as intended, or remove this if it is unneeded.
-
-typedef struct
-{
-    PreprocessingDirective directive;
-    char* macro_definition;
-} MacroCache;
-MacroCache MacroCacheStream[100];
-
-typedef struct
-{
-    char* key;
-    char* value;
-
-    size_t key_buffer_len;
-    size_t value_buffer_len;
-} char_char_dict;
-
-typedef struct
-{
-    struct temporary_file_information
-    {
-        char*   file_buffer;
-        size_t  total_file_size;
-        FILE*   file_stream;
-    } temp;
-
-    char_char_dict** tome_entries;
-
-    size_t tome_entries_buffer_len; // allocation/reallocation
-    size_t num_tome_entries; // iteration
-} TOME;
 
 #ifndef mlstring // multi_line_string
 #define mlstring(x) (#x)
@@ -96,27 +21,30 @@ typedef struct
 #define TokenStreamSize (sizeof(TokenStream)/sizeof(TokenStream[0]))
 #endif // TokenStreamSize
 
+// [ cfarvin::TODO ] relocate
 typedef enum
-    {
-	terminal_type_none, // [ cfarvin::TODO ] remove this? probably.
-	terminal_type_unknown,
-	terminal_type_terminal,
-	terminal_type_nonterminal
-    } TerminalType;
+{
+    terminal_type_none, // [ cfarvin::TODO ] remove this? probably.
+    terminal_type_unknown,
+    terminal_type_terminal,
+    terminal_type_nonterminal
+} TerminalType;
 
+// [ cfarvin::TODO ] relocate
 typedef enum
-    {
-	token_type_none, // [ cfarvin::TODO ] remove this? probably.
-	token_type_unknown,
-	token_type_keyword,
-	token_type_numeric,
-	token_type_alphabetical,
-	token_type_delimiter,
-	token_type_operator,
-	token_type_forbidden,
-	token_type_ignored
-    } TokenType;
+{
+    token_type_none, // [ cfarvin::TODO ] remove this? probably.
+    token_type_unknown,
+    token_type_keyword,
+    token_type_numeric,
+    token_type_alphabetical,
+    token_type_delimiter,
+    token_type_operator,
+    token_type_forbidden,
+    token_type_ignored
+} TokenType;
 
+// [ cfarvin::TODO ] relocate
 typedef struct
 {
     TokenType token_type;

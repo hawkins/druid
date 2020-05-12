@@ -52,6 +52,8 @@ pushd msvc_landfill >nul
 
 cl %SCRIPT_DIR%\\%APP_NAME%.c /WX /Oi /Qpar /Ot /W4 /WX /Ob2 /O2 /GS /GL /MD /EHsc /nologo ^
 /I%cd%\.. ^
+/I%cd%\..\compiler_tools ^
+/I%cd%\..\data_structures ^
 /link /SUBSYSTEM:CONSOLE /NXCOMPAT /MACHINE:x64 /NODEFAULTLIB:MSVCRTD ^
 user32.lib ^
 gdi32.lib ^
