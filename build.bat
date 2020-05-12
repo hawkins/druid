@@ -1,42 +1,68 @@
 @echo off
 
-pushd
+@SET SCRIPT_DIR=%cd%
+@SET APP_NAME="druid"
+@SET APP_ARCH=x64
+
+::
+:: Initialize cl.exe for correct environment.
+::
 @where cl >nul 2>nul
-:: If cl was not found in path, initialize for x86
-IF %ERRORLEVEL% NEQ 0 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall" x86 >nul
+:: VS 2017 Community Edition
+rem IF %ERRORLEVEL% NEQ 0 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall" %APP_ARCH% >nul
+
+:: VS 2017 Professional Edition
+rem IF %ERRORLEVEL% NEQ 0 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall" %APP_ARCH% >nul
+
+:: VS 2017 Enterprise Edition
+rem IF %ERRORLEVEL% NEQ 0 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall" %APP_ARCH% >nul
+
+:: VS 2019 Community Edition
+IF %ERRORLEVEL% NEQ 0 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" %APP_ARCH% >nul
+
+:: VS 2019 Enterprise Edition
+rem IF %ERRORLEVEL% NEQ 0 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %APP_ARCH% >nul
+
 
 ::
-:: [ COMPILER OPTIONS ]
+:: Compile & Link
 ::
-:: /Za     Emits an error for language constructs that are not compatible with ANSI C89 or ISO C++11.
-:: /Z7	   Full symbolic debug info. No pdb. (See /Zi, /Zl).
-:: /GS	   Detect buffer overruns.
-:: /MD	   Multi-thread specific, DLL-specific runtime lib. (See /MDd, /MT, /MTd, /LD, /LDd).
-:: /GL	   Whole program optimization.
-:: /EHsc   No exception handling (Unwind semantics requrie vstudio env). (See /W1).
-:: /I<arg> Specify include directory.
-:: /Wall   Displays all warnings, including those that have been turned off by default.
-:: /W3     Displays all "production quality" warnings.
-:: /WX     Treats all compiler warnings as errors.
-
-::
-:: [ LINKER OPTIONS ]
-::
+:: /TC                  Compile as C code.
+:: /TP                  Compile as C++ code.
+:: /Oi                  Enable intrinsic functions.
+:: /Od 	                Disables optimization.
+:: /Qpar                Enable parallel code generation.
+:: /Ot                  Favor fast code (over small code).
+:: /Ob2                 Enable full inline expansion. [ cfarvin::NOTE ] Debugging impact.
+:: /Z7	                Full symbolic debug info. No pdb. (See /Zi, /Zl).
+:: /GS	                Detect buffer overruns.
+:: /MD	                Multi-thread specific, DLL-specific runtime lib. (See /MDd, /MT, /MTd, /LD, /LDd).
+:: /GL	                Whole program optimization.
+:: /EHsc                No exception handling (Unwind semantics requrie vstudio env). (See /W1).
+:: /WX                  Treat linker errors as warnings; no output file produced.
+:: /I<arg>              Specify include directory.
 :: /link                Invoke microsoft linker options.
 :: /NXCOMPAT            Comply with Windows Data Execution Prevention.
 :: /MACHINE:<arg>       Declare machine arch (should match vcvarsall env setting).
 :: /NODEFAULTLIB:<arg>  Ignore a library.
-:: /LIBPATH:<arg>       Specify library directory/directories
+:: /LIBPATH:<arg>       Specify library directory/directories.
+IF %ERRORLEVEL% NEQ 0 GOTO :exit
+mkdir msvc_landfill >nul 2>nul
+pushd msvc_landfill >nul
 
-popd
+cl %SCRIPT_DIR%\\%APP_NAME%.c /WX /Oi /Qpar /Ot /W4 /WX /Ob2 /O2 /GS /GL /MD /EHsc /nologo ^
+/I%cd%\.. ^
+/link /SUBSYSTEM:CONSOLE /NXCOMPAT /MACHINE:x64 /NODEFAULTLIB:MSVCRTD ^
+user32.lib ^
+gdi32.lib ^
+shell32.lib ^
+odbccp32.lib
 
-:: "%~1" prefix the first command line arg with the string "..\..\"
-:: and remove quotations before seinding it as an argument to cl.
-cl druid.c /W3 /WX /Za -Z7 /GS /MD /EHsc /nologo /link /NXCOMPAT /MACHINE:x86 /NODEFAULTLIB:MSVCRTD
-::/LIBPATH: user32.lib
-::gdi32.lib ^
-::shell32.lib ^
-::odbccp32.lib
+IF %ERRORLEVEL% NEQ 0 GOTO :exit
+xcopy /y %APP_NAME%.exe ..\ >null
+popd >null
 
-:: exit
-cmd /k
+rem IF %ERRORLEVEL% NEQ 0 GOTO :exit
+rem engine.exe
+
+:exit

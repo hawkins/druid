@@ -9,7 +9,7 @@ static inline const bool IsAlphabetical(const char character)
     {
 	return true;
     }
-   
+
     return false;
 }
 
@@ -74,16 +74,16 @@ static inline const bool TestIsNumeric()
 
 static inline const bool IsDelimiter(const char character)
 {
-    if(character == ' ' || 
-       character == ';' || 
-       character == ',' || 
-       character == '#' || 
+    if(character == ' ' ||
+       character == ';' ||
+       character == ',' ||
+       character == '#' ||
        character == ':')
     {
         return true;
     }
 
-    return false; 
+    return false;
 }
 
 static inline const bool TestIsDelimiter()
@@ -134,21 +134,21 @@ bool preprocess(TOME* const tome)
         // [ assemblyDruid::TODO ] check all possible return values for fopen
 #if _WIN32
 #pragma warning(push)
-#pragma warning( disable: 4996 ) 
+#pragma warning( disable: 4996 )
 #endif // _WIN32
 
         file_name = (char*) malloc(tome->tome_entries[i]->value_buffer_len * sizeof(char));
         file_name = tome->tome_entries[i]->value;
         file_stream = fopen(file_name, "r" );
-    
+
 #if _WIN32
 #pragma warning(push)
-#pragma warning( disable: 4996 )    
+#pragma warning( disable: 4996 )
 #endif // _WIN32
 
         if (file_stream != NULL)
         {
-            // Find the file len, allocate appropriate quantity of memory 
+            // Find the file len, allocate appropriate quantity of memory
             fseek(file_stream, 0, SEEK_END);
             total_file_size = ftell( file_stream );
             file_buffer = (char*) calloc(total_file_size, sizeof(char));
@@ -158,7 +158,7 @@ bool preprocess(TOME* const tome)
         }
         else
         {
-            // [ assemblyDruid::TODO ] unified system for error handling 
+            // [ assemblyDruid::TODO ] unified system for error handling
             dbgPrint("[ FATAL ] Could not open the file.\n");
             assert(0);
         }
@@ -185,9 +185,9 @@ bool preprocess(TOME* const tome)
                         newline_found = 1;
                         line_position_end = cursor_position;
 
-                        // [ assemblyDruid:TODO ] turn each assertion into valid error message -> exit() 
+                        // [ assemblyDruid:TODO ] turn each assertion into valid error message -> exit()
                         directive_length = line_position_end - line_position_start + 1;
-                        assert(line_position_end); // dont want negative index 
+                        assert(line_position_end); // dont want negative index
                         assert(directive_length > 2);
                         directive_source = (char*) calloc(directive_length, sizeof(char));
                         size_t directive_cursor = 0;
@@ -223,18 +223,18 @@ bool preprocess(TOME* const tome)
                         // note deliberate on which would be better ( or other options in general ), i'm just going
                         // to do stuipd, expensive string comparison.
                         //
-                        // This is extra extra stupid as we will have to compare between every "string" in the 
+                        // This is extra extra stupid as we will have to compare between every "string" in the
                         // list of possible directive types. (i.e. "summon" versus "if", etc). For the time being,
                         // we're only checking for "summon". We will need to have this discussion before adding more
                         // possible directive types.
-                    
-                        // Directive type determined. Do the thing. 
+
+                        // Directive type determined. Do the thing.
                         if (!strncmp(directive_keyword, "summon", directive_source_cursor))
                         {
                             dbgPrint("[ DIRECTIVE DETECTED ] %s, %zd characters compared\n",
                                      directive_keyword, directive_source_cursor);
                             dbgPrint("\n");
-                        
+
                             /* void apply(FILE* fp, */
                             /*            long int offset, */
                             /*            PreprocessingDirective directive, */
@@ -243,13 +243,13 @@ bool preprocess(TOME* const tome)
                         break;
                     }
 
-                    // [ assemblyDruid::TODO ] handle EOF case (no newline) 
+                    // [ assemblyDruid::TODO ] handle EOF case (no newline)
                     if ((cursor_position == (total_file_size -1)) && (!newline_found))
                     {
                         dbgPrint("[ FATAL ] No newline following directive\n");
                         assert(0);
                     }
-                    // cursor_position = line_position_start; 
+                    // cursor_position = line_position_start;
                 }
             }
             if (directive_source) { free(directive_source); }
@@ -282,7 +282,7 @@ addTomeEntry(TOME* const tome, char_char_dict* const entry)
         else
         {
             tome->tome_entries_buffer_len *= 2;
-            
+
             // [ assemblyDruid ] .... is this right?
             if (realloc(tome->tome_entries, (tome->tome_entries_buffer_len * sizeof(char_char_dict*))))
             {
@@ -315,20 +315,20 @@ processTome(TOME* const tome)
     quick_del(tome->temp.file_buffer);
     tome->temp.total_file_size = 0;
     dbgPrint("\tTome cleaned.\n");
-        
+
 #if _WIN32
 #pragma warning(push)
 #pragma warning( disable: 4996 )
 #endif // _WIN32
-                        
+
     tome->temp.file_stream = fopen("tome", "r" );
     dbgPrint("\tOpened file stream 'tome'.\n");
-    
+
 #if _WIN32
 #pragma warning(push)
 #pragma warning( disable: 4996 )
 #endif // _WIN32
-                        
+
     if (tome->temp.file_stream != NULL)
     {
         fseek(tome->temp.file_stream, 0, SEEK_END);
@@ -349,7 +349,7 @@ processTome(TOME* const tome)
     }
 
     dbgPrint("\tTome file contents:\n%s\n", tome->temp.file_buffer);
-    
+
     size_t line_start = 0;
     size_t line_number = 0;
     size_t  zero_corrected_prev_comment_char_position = 0;
@@ -372,7 +372,7 @@ processTome(TOME* const tome)
                         discard_line = true;
                         /* dbgPrint("\tComment found on line %zd. discard_line set to [ true ]\n", line_number); */
                     }
-                    
+
                     zero_corrected_prev_comment_char_position = 0;
                 }
                 else
@@ -386,7 +386,7 @@ processTome(TOME* const tome)
         // check for new line
         if (_char == '\n')
         {
-            char_char_dict* temp_entry;
+            char_char_dict* temp_entry = NULL;
 
             if (!discard_line)
             {
@@ -409,9 +409,9 @@ processTome(TOME* const tome)
                         else
                         {
                             at_symbol_index = sub_index;
-                            
+
                             dbgPrint("\tAllocating memory for new char_char_dict.\n");
-                                
+
                             temp_entry = (char_char_dict*) malloc(sizeof(char_char_dict));
                             temp_entry->key_buffer_len = (sub_index - line_start);
                             temp_entry->key =
@@ -435,11 +435,11 @@ processTome(TOME* const tome)
                             // Pickig up '@' in lines that should be ignored.
                             //
                             //
-                            
+
                             dbgPrint("\tAdded key { %s } to tome.\n", temp_entry->key);
                         }
                     }
-                    
+
                     if ((!at_symbol_found_on_this_line) &&
                         (tome->temp.file_buffer[sub_index] != ' '))
                     {
@@ -451,7 +451,7 @@ processTome(TOME* const tome)
                         char* non_space_value_character_buffer =
                             (char*) malloc((file_index - at_symbol_index) * sizeof(char));
                         size_t non_space_value_characters = 0;
-                        
+
                         for (size_t super_sub_index = at_symbol_index;
                              super_sub_index < file_index;
                              super_sub_index++)
@@ -476,7 +476,7 @@ processTome(TOME* const tome)
                         }
 
                         quick_del(non_space_value_character_buffer);
-                        
+
                         addTomeEntry(tome, temp_entry);
                         dbgPrint("\tAdded tome entry: {key: %s, value: %s}\n",
                                  temp_entry->key,
