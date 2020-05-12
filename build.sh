@@ -1,9 +1,9 @@
 function compile_test {
-  gcc -g druid.c -o druid -Wall -pedantic -D_TEST
+  gcc -g druid.c -o test -D_TEST
 }
 
 function compile_app {
-  gcc -g druid.c -o druid -Wall -pedantic -Werror
+  gcc -g druid.c -o druid
 }
 
 case "$1" in

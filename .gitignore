@@ -58,3 +58,5 @@ test
 
 # Editor files
 tags
+.idea
+cmake-build-debug

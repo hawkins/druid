@@ -21,16 +21,3 @@ status entry_point()
 
 ///////////////////////
 
-/* comment */
-status
-entry_point
-(
-)
-{
-if
-(
-g
-:
-count
-)
-

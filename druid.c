@@ -560,6 +560,7 @@ int main(int argc, char** argv) {
 #else
 
 int main(int argc, char** argv) {
+  printf("test");
   // Read in a series of characterrs separated by spaces
   // /* comment */     ["/*", "comment", "*/"]
   int number_of_tokens = 0;
@@ -570,7 +571,7 @@ int main(int argc, char** argv) {
   }
 
   int index;
-  for (index = 0; index < number_of_tokens; ++index)
+  for (index = 0; index < number_of_tokens - 1; ++index)
     printf("%s\n", TokenStream[index]->data);
 
   printf("\n[ SUCCESS ]\n");
