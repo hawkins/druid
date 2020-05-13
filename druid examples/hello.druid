@@ -1,5 +1,7 @@
 /* comment */
 
+#summon FunnyBizness
+
 status entry_point()
 {
     if(g:count)
