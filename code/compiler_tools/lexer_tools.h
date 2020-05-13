@@ -241,11 +241,17 @@ Token* NextToken(FILE* f) {
 #pragma warning( disable : 4996)
 #endif // _WIN64
 
-    fscanf(f, "%s", buffer);
+    int fscanf_result = fscanf(f, "%s", buffer);
 
 #ifdef _WIN64
 #pragma warning( pop )
 #endif // _WIN64
+
+    if (fscanf_result == 0)
+    {
+        DebugPrint("[ FATAL ] fscanf reports zero matches\n.");
+        return NULL;
+    }
 
     result->data = buffer;
     return result;

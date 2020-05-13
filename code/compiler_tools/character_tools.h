@@ -2,7 +2,7 @@
 #define __CHARACTER_TOOLS__
 
 
-__internal__ __inline__ const bool
+__internal__ __inline__  bool
 IsAlphabetical(const char character)
 {
     if (
@@ -17,7 +17,7 @@ IsAlphabetical(const char character)
 }
 
 
-__internal__ __inline__ const bool
+__internal__ __inline__ bool
 IsNumeric(const char character)
 {
     if (
@@ -34,7 +34,7 @@ IsNumeric(const char character)
 #if __GNUC__
 #pragma GCC diagnostic ignored "-Wunused-function"
 #endif // __GNUC__
-__internal__ __inline__ const bool
+__internal__ __inline__ bool
 IsDelimiter(const char character)
 {
     if(character == ' ' ||
@@ -54,7 +54,7 @@ IsDelimiter(const char character)
 #endif // __GNUC__
 
 
-__internal__ __inline__ const bool
+__internal__ __inline__ bool
 IsWhitespace(const char character)
 {
     if (character == ' ')
