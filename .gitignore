@@ -1,0 +1,12 @@
+# Editor Files
+.idea
+tags
+cscope.out
+
+# Build artifacts
+build/cmake-build-*
+build/druid
+build/test
+
+# Misc
+*.dSYM
