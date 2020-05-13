@@ -61,7 +61,7 @@ main(int argc, char** argv)
     if(argc && argv ){} // silence compiler warnings
 
     InitPreprocess();
-    InitLex();
+    /* InitLex(); */
 
     return 0;
 }
