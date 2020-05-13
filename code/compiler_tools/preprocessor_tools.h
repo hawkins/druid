@@ -68,6 +68,10 @@ preprocess(TOME* const tome)
     return false;
 }
 
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif // __GNUC__
 __internal__ __inline__ void
 addTomeEntry(TOME* const tome, char_char_dict* const entry)
 {
@@ -81,14 +85,10 @@ addTomeEntry(TOME* const tome, char_char_dict* const entry)
 
     }
 }
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic pop
+#endif // __GNUC__
 
-__internal__ __inline__ void
-processTome(TOME* const tome)
-{
-    if (tome)
-    {
-
-    }
-}
 
 #endif // __PREPROCESSOR_TOOLS__

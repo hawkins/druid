@@ -47,8 +47,8 @@ union
 
 typedef enum
 {
-    LITTLE_ENDIAN = 0,
-    BIG_ENDIAN    = 1
+    LSB = 0,
+    MSB    = 1
 } Endianness;
 Endianness SystemEndianness;
 
@@ -59,11 +59,11 @@ DetermineSystemEndianness()
     EndiannessUnion.dword = 1;
     if (EndiannessUnion.word[0])
     {
-        SystemEndianness = LITTLE_ENDIAN;
+        SystemEndianness = LSB;
         return;
     }
 
-    SystemEndianness = BIG_ENDIAN;
+    SystemEndianness = MSB;
 }
 
 

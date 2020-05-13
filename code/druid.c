@@ -25,7 +25,7 @@ InitPreprocess()
     // [ cfarvin::TODO ]
     // (May 12 2020) There's also a preprocess(TOME* ) in preprocessor_tools.h
     // One of these must go.
-    processTome(&tome);
+    preprocess(&tome);
 
     DebugPrint("\n[ SUCCESS ]\n");
     return true;
@@ -59,9 +59,10 @@ int
 main(int argc, char** argv)
 {
     if(argc && argv ){} // silence compiler warnings
+    DetermineSystemEndianness();
 
     InitPreprocess();
-    /* InitLex(); */
+    InitLex();
 
     return 0;
 }

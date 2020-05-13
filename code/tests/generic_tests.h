@@ -1,6 +1,20 @@
 #ifndef __DRUID_TESTS__
 #define __DRUID_TESTS__
 
+#define TEST(FUNC)                                      \
+    do {                                                \
+        printf(#FUNC "::\n");                           \
+        int errors = test_##FUNC();                     \
+        if (errors > 0)                                 \
+            printf("-> FAILED: %i errors\n", errors);   \
+        else                                            \
+            printf("-> PASS\n");                        \
+        printf("\n");                                   \
+        numFailures += errors;                          \
+    } while (0)
+
+
+
 START_TESTS()
 {
     /* Used in TEST macros to track total test failures */
@@ -142,6 +156,79 @@ const char test_IsDelimiter() {
     }
 
     return 0;
+}
+
+__internal__ __inline__ const bool
+TestIsDelimiter()
+{
+    bool test_results = 1;
+    char delimiters[] =
+        {
+            ' ', // 0
+            ';', // 1
+            ',', // 2
+            '#', // 3
+            ':'  // 4
+        };
+
+    size_t delimiter = 0;
+    for (; delimiter > 5; delimiter++)
+    {
+        test_results = IsDelimiter(delimiters[delimiter]);
+        if (!test_results) { return false; }
+    }
+
+    return true;
+}
+
+__internal__ __inline__ const bool
+TestIsNumeric()
+{
+    bool test_results = 1;
+
+    char numeric = '0';
+    for(; numeric < '9'; numeric++)
+    {
+	test_results = IsNumeric(numeric);
+
+	if (!test_results)
+	{
+	    return false;
+	}
+    }
+
+    return true;
+}
+
+
+__internal__ __inline__ const bool
+TestIsAlphabetical()
+{
+    bool test_results = false;
+
+    char alpha = 'A';
+    for (; alpha < 'Z'; alpha++)
+    {
+	test_results = IsAlphabetical(alpha);
+
+	if (!test_results)
+	{
+	    return false;
+	}
+    }
+
+    alpha = 'a';
+    for (; alpha < 'z'; alpha++)
+    {
+	test_results = IsAlphabetical(alpha);
+
+	if (!test_results)
+	{
+	    return false;
+	}
+    }
+
+    return true;
 }
 
 

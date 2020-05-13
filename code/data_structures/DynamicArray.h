@@ -1,23 +1,21 @@
 /*
-   DynamicArray Limitations
-   -------------------------
-     - DynamicArray does not account for functions which modify the `data`
-       member directly, as it cannot tell how many elements may have been
-       added. To do this safely, the dynamic array must have been set up
-       manually or with a call to DAInit() which allocated to proper number
-       of bytes before the direct modification. If this is the case, ask
-       yourself: "Do I really need a dynamic array?". If the answer is still
-       yes, just remember that DynamicArray only tracks element-counts and
-       resizes properly via functions designed to interact with and modify
-       DynamicArrays, like DAPush(). You may run into issues with assertions
-       and sanity checks within the DynamicArray functions if you attempt to
-       use them after altering the `data` member yourself.
+  DynamicArray Limitations
+  -------------------------
+  - DynamicArray does not account for functions which modify the `data`
+  member directly, as it cannot tell how many elements may have been
+  added. To do this safely, the dynamic array must have been set up
+  manually or with a call to DAInit() which allocated to proper number
+  of bytes before the direct modification. If this is the case, ask
+  yourself: "Do I really need a dynamic array?". If the answer is still
+  yes, just remember that DynamicArray only tracks element-counts and
+  resizes properly via functions designed to interact with and modify
+  DynamicArrays, like DAPush(). You may run into issues with assertions
+  and sanity checks within the DynamicArray functions if you attempt to
+  use them after altering the `data` member yourself.
 */
 
 #ifndef __DynamicArray__
 #define __DynamicArray__ 1
-
-#include <engine_tools/type_tools.h>
 
 #include <stdio.h>
 #include <assert.h>
@@ -39,11 +37,15 @@ typedef struct
 } DynamicArray;
 
 
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif // __GNUC__
 #define DAInit(type) API_DAInit(sizeof(type))
 __internal__ __inline__ DynamicArray*
 API_DAInit(const size_t datatypesize_in)
 {
-    uAssertMsg_v(datatypesize_in, "Data type size must be non-zero.\n");
+    AssertMsg_v(datatypesize_in, "Data type size must be non-zero.\n");
     DynamicArray* const da = (DynamicArray*) calloc(1, sizeof(DynamicArray));
 
     // Initialize statics
@@ -62,14 +64,23 @@ API_DAInit(const size_t datatypesize_in)
 
     return da;
 }
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic pop
+#endif // __GNUC__
 
+
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif // __GNUC__
 #define DAPush(da, data_in) API_DAPush(da, VPPC_STR_LITERAL(void** const) data_in)
 __internal__ __inline__ bool
-API_DAPush(_mut_ DynamicArray* const       restrict da,
-             const void**         const const restrict data_in)
+API_DAPush(_mut_ DynamicArray* const restrict da,
+           const void**        const restrict data_in)
 {
-    uAssertMsg_v(da,      "Null DynamicArray ptr provided.\n");
-    uAssertMsg_v(data_in, "Null data ptr pvoided.\n");
+    AssertMsg_v(da,      "Null DynamicArray ptr provided.\n");
+    AssertMsg_v(data_in, "Null data ptr pvoided.\n");
 
     if (da && data_in)
     {
@@ -97,17 +108,25 @@ API_DAPush(_mut_ DynamicArray* const       restrict da,
 
     return false;
 }
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic pop
+#endif // __GNUC__
 
 
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif // __GNUC__
 __internal__ __inline__ void*
 DAIndex(_mut_ DynamicArray* const restrict da,
-         const size_t index)
+        const size_t index)
 {
-    uAssertMsg_v(da, "Null DynamicArray ptr pvoided.\n");
-    uAssertMsg_v(index < da->length,
-                 "Index [ %zd ] surpasses dynamic array length: [ %zd ].\n",
-                 index,
-                 da->length);
+    AssertMsg_v(da, "Null DynamicArray ptr pvoided.\n");
+    AssertMsg_v(index < da->length,
+                "Index [ %zd ] surpasses dynamic array length: [ %zd ].\n",
+                index,
+                da->length);
 
     if (da && (index < da->length))
     {
@@ -116,15 +135,23 @@ DAIndex(_mut_ DynamicArray* const restrict da,
 
     return NULL;
 }
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic pop
+#endif // __GNUC__
 
 
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif // __GNUC__
 __internal__ __inline__ bool
 DAPop(_mut_ DynamicArray* const restrict da)
 {
-    uAssertMsg_v(da,         "Null DynamicArray ptr pvoided.\n");
-    uAssertMsg_v(da->length, "Dynamic array length must be non-zero\n");
-    uAssertMsg_v(da->length <= da->max_length,
-                 "Dynamic array length must be less than the maximum length");
+    AssertMsg_v(da,         "Null DynamicArray ptr pvoided.\n");
+    AssertMsg_v(da->length, "Dynamic array length must be non-zero\n");
+    AssertMsg_v(da->length <= da->max_length,
+                "Dynamic array length must be less than the maximum length");
 
     if (da && da->length && da->length <= da->max_length)
     {
@@ -136,12 +163,20 @@ DAPop(_mut_ DynamicArray* const restrict da)
 
     return false;
 }
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic pop
+#endif // __GNUC__
 
 
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif // __GNUC__
 __internal__ __inline__ bool
 DAFitToSize(_mut_ DynamicArray* const restrict da)
 {
-    uAssertMsg_v(da,      "Null DynamicArray ptr provided.\n");
+    AssertMsg_v(da,      "Null DynamicArray ptr provided.\n");
 
     if (da && (da->length > da->scaling_factor))
     {
@@ -154,15 +189,23 @@ DAFitToSize(_mut_ DynamicArray* const restrict da)
 
     return false;
 }
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic pop
+#endif // __GNUC__
 
 
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif // __GNUC__
 __internal__ __inline__ bool
 DASetScalingFactor(_mut_ DynamicArray* const restrict da,
-                    const size_t scaling_factor_in)
+                   const size_t scaling_factor_in)
 {
-    uAssertMsg_v(da, "Null DynamicArray ptr provided.\n");
-    uAssertMsg_v(scaling_factor_in > 1,
-                 "Scaling factor must be greater than 1.\n");
+    AssertMsg_v(da, "Null DynamicArray ptr provided.\n");
+    AssertMsg_v(scaling_factor_in > 1,
+                "Scaling factor must be greater than 1.\n");
 
     if (da && scaling_factor_in > 1)
     {
@@ -174,8 +217,16 @@ DASetScalingFactor(_mut_ DynamicArray* const restrict da,
 
     return false;
 }
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic pop
+#endif // __GNUC__
 
 
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif // __GNUC__
 __internal__ __inline__ bool
 DADestroy(_mut_ DynamicArray* const restrict da)
 {
@@ -189,6 +240,10 @@ DADestroy(_mut_ DynamicArray* const restrict da)
 
     return false;
 }
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic pop
+#endif // __GNUC__
 
 
 

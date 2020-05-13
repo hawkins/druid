@@ -14,6 +14,11 @@ typedef struct
     const size_t bytes;
 } String;
 
+
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif // __GNUC__
 __internal__ __inline__ String*
 StringInit(const char* str)
 {
@@ -31,7 +36,16 @@ StringInit(const char* str)
 
     return NULL;
 }
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic pop
+#endif // __GNUC__
 
+
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif // __GNUC__
 __internal__ __inline__ bool
 StringDestroy(String* const uStr)
 {
@@ -44,6 +58,10 @@ StringDestroy(String* const uStr)
 
     return false;
 }
+// [ cfarvin::TODO ] Remove after use in Druid
+#if __GNUC__
+#pragma GCC diagnostic pop
+#endif // __GNUC__
 
 // [ cfarvin::TODO ]
 /* __internal__ __inline__ uDynamicArray* */

@@ -1,21 +1,13 @@
-<<<<<<< HEAD
-function compile_test {
-  gcc -g druid.c -o test -D_TEST
-}
+#!/usr/bin/env bash
 
-function compile_app {
-  gcc -g druid.c -o druid
-}
+APP_NAME="druid"
 
-case "$1" in
-  "test")
-    compile_test ;;
-  "app")
-    compile_app  ;;
-  *)
-    echo "Usage: ./build.sh [test|app]"
-esac
+BUILD_DIR=$(pwd)
+OUTPUT_DIR="$BUILD_DIR"/..
+CODE_DIR="$OUTPUT_DIR"/code
 
-=======
-gcc druid.c -Wall -Werror -o druid
->>>>>>> preprocessor
+gcc -I"$CODE_DIR" \
+    -I"$CODE_DIR"/tests/ \
+    -I"$CODE_DIR"/compiler_tools/ \
+    -I"$CODE_DIR"/data_structures/ \
+    "$CODE_DIR"/"$APP_NAME".c -Wall -Werror -o "$OUTPUT_DIR"/"$APP_NAME"

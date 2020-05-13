@@ -245,7 +245,7 @@ Token* NextToken(FILE* f) {
 
 #ifdef _WIN64
 #pragma warning( pop )
-#endif _WIN64
+#endif // _WIN64
 
     result->data = buffer;
     return result;
@@ -313,19 +313,6 @@ uint8_t expect_int(int actual, enum COMPARISON_OPERATOR c, int expected) {
     expect_int(A, TO_EQUAL, B);                                         \
     if (expect_int(A, TO_EQUAL, B) != 0)                                \
         printf("  * expected:\t%i\t(" #B ")\n    actual:\t%i\t(" #A ")\n", B, A);
-#define TEST(FUNC)                                      \
-    do {                                                \
-        printf(#FUNC "::\n");                           \
-        int errors = test_##FUNC();                     \
-        if (errors > 0)                                 \
-            printf("-> FAILED: %i errors\n", errors);   \
-        else                                            \
-            printf("-> PASS\n");                        \
-        printf("\n");                                   \
-        numFailures += errors;                          \
-    } while (0)
 
 
-
-
-#endif __LEXER_TOOLS__
+#endif // __LEXER_TOOLS__
