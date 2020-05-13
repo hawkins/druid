@@ -1,0 +1,10 @@
+// [ assemblyDruid::ASSUMTION ]
+// 1. One line per spell
+// 2. Spell alias is not lead by any character(s) per line.
+// 3. Spell alias is not trailed by any non-alphanumeric characters, except for spaces.
+// 4. After '@', everything that isn't a space or new line is considered a path.
+
+stdio    @ ./spells/stdio.spell
+math     @ ./spells/math.spell
+dataCube @ ./spells/dataCube.spell
+// ALIAS @ ./spells/REFERENCE.spell

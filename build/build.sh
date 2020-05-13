@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 function compile_test {
   gcc -g druid.c -o test -D_TEST
 }
@@ -15,3 +16,6 @@ case "$1" in
     echo "Usage: ./build.sh [test|app]"
 esac
 
+=======
+gcc druid.c -Wall -Werror -o druid
+>>>>>>> preprocessor
