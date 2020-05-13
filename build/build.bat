@@ -1,8 +1,21 @@
 @echo off
 
-@SET SCRIPT_DIR=%cd%
 @SET APP_NAME="druid"
 @SET APP_ARCH=x64
+
+:: Build directory setup
+@SET BUILD_DIR=%cd%
+
+:: Code directory setup
+@SET CODE_DIR=%BUILD_DIR%\..\code
+echo %CODE_DIR%
+IF NOT EXIST %CODE_DIR%\NUL GOTO :ERROR_CODE_DIR
+
+:: Output directory setup
+@SET OUTPUT_DIR=%BUILD_DIR%\..
+echo %OUTPUT_DIR%
+IF NOT EXIST %OUTPUT_DIR%\NUL GOTO :ERROR_OUTPUT_DIR
+
 
 ::
 :: Initialize cl.exe for correct environment.
@@ -50,10 +63,10 @@ IF %ERRORLEVEL% NEQ 0 GOTO :exit
 mkdir msvc_landfill >nul 2>nul
 pushd msvc_landfill >nul
 
-cl %SCRIPT_DIR%\\%APP_NAME%.c /WX /Oi /Qpar /Ot /W4 /WX /Ob2 /O2 /GS /GL /MD /EHsc /nologo ^
-/I%cd%\.. ^
-/I%cd%\..\compiler_tools ^
-/I%cd%\..\data_structures ^
+cl %CODE_DIR%\\%APP_NAME%.c /WX /Oi /Qpar /Ot /W4 /WX /Ob2 /O2 /GS /GL /MD /EHsc /nologo ^
+/I%CODE_DIR%\ ^
+/I%CODE_DIR%\compiler_tools ^
+/I%CODE_DIR%\data_structures ^
 /link /SUBSYSTEM:CONSOLE /NXCOMPAT /MACHINE:x64 /NODEFAULTLIB:MSVCRTD ^
 user32.lib ^
 gdi32.lib ^
@@ -61,10 +74,23 @@ shell32.lib ^
 odbccp32.lib
 
 IF %ERRORLEVEL% NEQ 0 GOTO :exit
-xcopy /y %APP_NAME%.exe ..\ >null
+xcopy /y %APP_NAME%.exe %OUTPUT_DIR% >null
 popd >null
+GOTO :exit
 
-rem IF %ERRORLEVEL% NEQ 0 GOTO :exit
-rem engine.exe
+::
+:: ERROR_CODE_DIR
+::
+:ERROR_CODE_DIR
+echo The parent directory didn't have a 'code' subdirectory. Run this script from the 'build' directory.
+GOTO :exit
+
+::
+:: ERROR_OUTPUT_DIR
+::
+:ERROR_OUTPUT_DIR
+echo There doesn't seem to be a parent directory. Run this script from the 'build' directory.
+GOTO :exit
+
 
 :exit
