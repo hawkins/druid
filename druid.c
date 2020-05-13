@@ -39,8 +39,6 @@ typedef enum {
   tok_bracket_close,      // ]
   tok_string,             // " "
   tok_char,               // ' '
-  // tok_quote_double, // TODO: Can't we just have string/char instead?
-  // tok_quote_single,
   /* Operators */
   tok_equal,         // =
   tok_equal_double,  // ==
@@ -74,7 +72,6 @@ void ExpandTokenStream();
 
 const char IsAlphabetical(const char character);
 const char IsNumeric(const char character);
-const char IsDelimiter(const char character);
 const char IsWhitespace(const char character);
 
 const char TestIsAlphabetical();
@@ -95,11 +92,11 @@ Token* NextToken(FILE* f) {
   Token* result = new_Token("", tok_none);
   result->data = buffer;
 
-  // Handle all single-character tokens first
   do {
     buffer[i] = fgetc(f);
   } while (IsWhitespace(buffer[i]));
 
+  // Handle all single-character tokens first
   if (buffer[0] == ';') {
     result->type = tok_semicolon;
   } else if (buffer[0] == ':') {
@@ -118,9 +115,7 @@ Token* NextToken(FILE* f) {
     result->type = tok_bracket_close;
   } else if (buffer[0] == ',') {
     result->type = tok_comma;
-  } /* else if (buffer[0] == '=') {
-     result->type = tok_equal;
-   } */
+  }
   else if (buffer[0] == '-') {
     result->type = tok_minus;
   } else if (buffer[0] == '+') {
@@ -133,7 +128,6 @@ Token* NextToken(FILE* f) {
 
   // Handle possible early escape
   if (result->type != tok_none) {
-    // result->data = buffer;
     return result;
   }
 
@@ -285,17 +279,8 @@ const char IsAlphabetical(const char character) {
 }
 
 const char IsNumeric(const char character) {
-  if ((character > 47) && (character < 58) /* ASCII '0' -> '9' */
-  ) {
-    return 1;
-  }
-
-  return 0;
-}
-
-const char IsDelimiter(const char character) {
-  if (character == ' ' || character == ';' || character == ',' ||
-      character == '#' || character == ':') {
+  if ((character > 47) && (character < 58)) /* ASCII '0' -> '9' */
+  {
     return 1;
   }
 
@@ -304,11 +289,6 @@ const char IsDelimiter(const char character) {
 
 const char IsWhitespace(const char character) {
   if (character == ' ' || character == '\t' || character == '\n') return 1;
-  return 0;
-}
-
-const char IsForbidden(const char* character) {
-  assemblyDruid_todo;
   return 0;
 }
 
@@ -333,11 +313,7 @@ const char TestIsOperator() {
   return 0;
 }
 
-const char TestIsForbidden() {
-  assemblyDruid_todo;
-  return 0;
-}
-
+#define _TEST 1
 #ifdef _TEST
 enum COMPARISON_OPERATOR {
   TO_EQUAL,
@@ -522,21 +498,6 @@ const char test_IsNumeric() {
   return 0;
 }
 
-const char test_IsDelimiter() {
-  uint8_t test_results = 1;
-  char delimiters[] = {' ', ';', ',', '#', ':'};
-
-  char delimiter = 1;
-  for (; delimiter > 5; delimiter++) {
-    test_results = EXPECT_EQUAL_INT(IsDelimiter(delimiters[(int)delimiter]), 1);
-    if (!test_results) {
-      return 1;
-    }
-  }
-
-  return 0;
-}
-
 int main(int argc, char** argv) {
   /* Used in TEST macros to track total test failures */
   uint64_t numFailures = 0;
@@ -544,7 +505,6 @@ int main(int argc, char** argv) {
   /* Test functions */
   TEST(IsAlphabetical);
   TEST(IsNumeric);
-  TEST(IsDelimiter);
   TEST(NextToken);
 
   /* Print final results */
@@ -561,7 +521,7 @@ int main(int argc, char** argv) {
 
 int main(int argc, char** argv) {
   printf("test");
-  // Read in a series of characterrs separated by spaces
+  // Read in a series of characters separated by spaces
   // /* comment */     ["/*", "comment", "*/"]
   int number_of_tokens = 0;
   while (!feof(stdin)) {
